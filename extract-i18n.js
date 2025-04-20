@@ -40,7 +40,7 @@ function getKeyByText(text, prefix) {
   
   let id = lastIds[prefix] || 0; // 获取当前模块的最后一个 id，没有则从 1 开始
   // 生成新的 key
-  const key = `${prefix}.key_${id++}`;
+  const key = `${prefix}.key_${++id}`;
   existingKeys[clean] = key; // 记录该中文和 key 的映射关系
 
   // 更新模块的 ID
@@ -86,6 +86,17 @@ function replaceChineseInTemplate(templateContent, filePath) {
         const key = getKeyByText(text, prefix);
         replacements.push({
           original: node.content,
+          replacement: `{{ $t('${key}') }}`
+        });
+      }
+    }
+    // 插槽
+    else if(node.type === 12) {
+      const text = node.content.content?.trim?.();
+      if (text && /[\u4e00-\u9fa5]/.test(text)) {
+        const key = getKeyByText(text, prefix);
+        replacements.push({
+          original: node.content.content,
           replacement: `{{ $t('${key}') }}`
         });
       }
