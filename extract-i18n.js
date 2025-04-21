@@ -52,7 +52,8 @@ function getKeyByText(text, prefix) {
 }
 
 function getPagePrefix(filePath) {
-  const segments = filePath.split(path.sep);
+  const normalized = path.normalize(filePath); // 保证是平台风格路径
+  const segments = normalized.split(path.sep);
   const pagesIndex = segments.indexOf("pages");
   if (pagesIndex >= 0 && segments.length > pagesIndex + 1) {
     return segments[pagesIndex + 1]; // 如 "home"
