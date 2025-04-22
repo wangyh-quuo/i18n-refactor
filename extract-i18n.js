@@ -9,6 +9,8 @@ const zhMap = {};
 const existingJson = getExistingJson();
 // 获取该模块的最后一个 id
 const lastIds = getLastKeyId(existingJson);
+// 用于维护全局已生成的 key
+const existingKeys = initExistingKeys(existingJson);
 
 function getLastKeyId() {
   const lastIds = {};
@@ -29,8 +31,18 @@ function getLastKeyId() {
   return lastIds;
 }
 
-// 用于维护全局已生成的 key
-const existingKeys = {};
+function initExistingKeys(existingJson) {
+  const map = {};
+  for (const module in existingJson) {
+    const group = existingJson[module];
+    for (const key in group) {
+      const value = group[key];
+      map[value] = `${module}.${key}`;
+    }
+  }
+  return map;
+}
+
 
 // 获取或生成唯一的 key
 function getKeyByText(text, prefix) {
@@ -87,7 +99,7 @@ function replaceChineseInTemplate(templateContent, filePath) {
       if (text && /[\u4e00-\u9fa5]/.test(text)) {
         const key = getKeyByText(text, prefix);
         replacements.push({
-          original: node.content,
+          original: text,
           replacement: `{{ $t('${key}') }}`,
         });
       }
@@ -103,7 +115,7 @@ function replaceChineseInTemplate(templateContent, filePath) {
         });
       }
     }
-     // 2. 标签属性中的中文
+    // 2. 标签属性中的中文
     else if (node.type === 1 && node.props) {
       for (const prop of node.props) {
         if (
@@ -118,7 +130,7 @@ function replaceChineseInTemplate(templateContent, filePath) {
           // 替换整个属性为 :attr="$t('key')"
           replacements.push({
             original: `${attrName}="${raw}"`,
-            replacement: `:${attrName}="$t('${key}')"`
+            replacement: `:${attrName}="$t('${key}')"`,
           });
         }
       }
