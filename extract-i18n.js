@@ -103,6 +103,26 @@ function replaceChineseInTemplate(templateContent, filePath) {
         });
       }
     }
+     // 2. 标签属性中的中文
+    else if (node.type === 1 && node.props) {
+      for (const prop of node.props) {
+        if (
+          prop.type === 6 && // ATTRIBUTE
+          prop.value &&
+          /[\u4e00-\u9fa5]/.test(prop.value.content)
+        ) {
+          const raw = prop.value.content;
+          const key = getKeyByText(raw, prefix);
+          const attrName = prop.name;
+
+          // 替换整个属性为 :attr="$t('key')"
+          replacements.push({
+            original: `${attrName}="${raw}"`,
+            replacement: `:${attrName}="$t('${key}')"`
+          });
+        }
+      }
+    }
 
     if (node.children) {
       node.children.forEach(walk);
