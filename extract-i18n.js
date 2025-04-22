@@ -8,48 +8,48 @@ const { exportToExcelByModule } = require("./packages/utils/exportToExcel");
 const zhMap = {};
 const existingJson = getExistingJson();
 // 获取该模块的最后一个 id
-const lastIds = getLastKeyId(existingJson);
+// const lastIds = getLastKeyId(existingJson);
 
-function getLastKeyId() {
-  const lastIds = {};
+// function getLastKeyId() {
+//   const lastIds = {};
 
-  function traverse(obj, prefix = null) {
-    for (const key in obj) {
-      if (typeof obj[key] === "object" && !Array.isArray(obj[key])) {
-        traverse(obj[key], key);
-      } else if (key.startsWith("key_")) {
-        const id = parseInt(key.split("_")[1]);
-        if (!lastIds[prefix] || id > lastIds[prefix]) {
-          lastIds[prefix] = id;
-        }
-      }
-    }
-  }
-  traverse(existingJson);
-  return lastIds;
-}
+//   function traverse(obj, prefix = null) {
+//     for (const key in obj) {
+//       if (typeof obj[key] === "object" && !Array.isArray(obj[key])) {
+//         traverse(obj[key], key);
+//       } else if (key.startsWith("key_")) {
+//         const id = parseInt(key.split("_")[1]);
+//         if (!lastIds[prefix] || id > lastIds[prefix]) {
+//           lastIds[prefix] = id;
+//         }
+//       }
+//     }
+//   }
+//   traverse(existingJson);
+//   return lastIds;
+// }
 
-// 用于维护全局已生成的 key
-const existingKeys = {};
+// // 用于维护全局已生成的 key
+// const existingKeys = {};
 
-// 获取或生成唯一的 key
-function getKeyByText(text, prefix) {
-  const clean = text.trim();
+// // 获取或生成唯一的 key
+// function getKeyByText(text, prefix) {
+//   const clean = text.trim();
 
-  // 如果已经存在，则直接返回对应的 key
-  if (existingKeys[clean]) return existingKeys[clean];
+//   // 如果已经存在，则直接返回对应的 key
+//   if (existingKeys[clean]) return existingKeys[clean];
 
-  let id = lastIds[prefix] || 0; // 获取当前模块的最后一个 id，没有则从 1 开始
-  // 生成新的 key
-  const key = `${prefix}.key_${++id}`;
-  existingKeys[clean] = key; // 记录该中文和 key 的映射关系
+//   let id = lastIds[prefix] || 0; // 获取当前模块的最后一个 id，没有则从 1 开始
+//   // 生成新的 key
+//   const key = `${prefix}.key_${++id}`;
+//   existingKeys[clean] = key; // 记录该中文和 key 的映射关系
 
-  // 更新模块的 ID
-  lastIds[prefix] = id;
+//   // 更新模块的 ID
+//   lastIds[prefix] = id;
 
-  zhMap[key] = clean; // 添加到最终的 zhMap
-  return key;
-}
+//   zhMap[key] = clean; // 添加到最终的 zhMap
+//   return key;
+// }
 
 function getPagePrefix(filePath) {
   const normalized = path.normalize(filePath); // 保证是平台风格路径
@@ -61,20 +61,20 @@ function getPagePrefix(filePath) {
   return "common"; // fallback
 }
 
-function flatToNested(flatObj) {
-  const nested = {};
-  for (const key in flatObj) {
-    const parts = key.split(".");
-    let current = nested;
-    parts.forEach((part, index) => {
-      if (!current[part]) {
-        current[part] = index === parts.length - 1 ? flatObj[key] : {};
-      }
-      current = current[part];
-    });
-  }
-  return nested;
-}
+// function flatToNested(flatObj) {
+//   const nested = {};
+//   for (const key in flatObj) {
+//     const parts = key.split(".");
+//     let current = nested;
+//     parts.forEach((part, index) => {
+//       if (!current[part]) {
+//         current[part] = index === parts.length - 1 ? flatObj[key] : {};
+//       }
+//       current = current[part];
+//     });
+//   }
+//   return nested;
+// }
 
 function replaceChineseInTemplate(templateContent, filePath) {
   const ast = compile(templateContent, { mode: "module" }).ast;
@@ -204,35 +204,35 @@ function processScriptFile(filePath) {
   console.log(`🔧 JS/TS 替换完成: ${filePath}`);
 }
 
-function getExistingJson() {
-  const zhFilePath = "locales/zh.json";
+// function getExistingJson() {
+//   const zhFilePath = "locales/zh.json";
 
-  let existingJson = {};
-  if (fs.existsSync(zhFilePath)) {
-    const existingContent = fs.readFileSync(zhFilePath, "utf-8");
-    existingJson = JSON.parse(existingContent);
-  }
-  return existingJson;
-}
+//   let existingJson = {};
+//   if (fs.existsSync(zhFilePath)) {
+//     const existingContent = fs.readFileSync(zhFilePath, "utf-8");
+//     existingJson = JSON.parse(existingContent);
+//   }
+//   return existingJson;
+// }
 
-function mergeZhJson(newJson) {
-  // 使用递归合并现有的 JSON 和新生成的 JSON
-  function deepMerge(target, source) {
-    for (const key in source) {
-      if (source.hasOwnProperty(key)) {
-        if (typeof source[key] === "object" && !Array.isArray(source[key])) {
-          if (!target[key]) target[key] = {};
-          deepMerge(target[key], source[key]);
-        } else {
-          target[key] = source[key];
-        }
-      }
-    }
-  }
+// function mergeZhJson(newJson) {
+//   // 使用递归合并现有的 JSON 和新生成的 JSON
+//   function deepMerge(target, source) {
+//     for (const key in source) {
+//       if (source.hasOwnProperty(key)) {
+//         if (typeof source[key] === "object" && !Array.isArray(source[key])) {
+//           if (!target[key]) target[key] = {};
+//           deepMerge(target[key], source[key]);
+//         } else {
+//           target[key] = source[key];
+//         }
+//       }
+//     }
+//   }
 
-  deepMerge(existingJson, newJson);
-  return existingJson;
-}
+//   deepMerge(existingJson, newJson);
+//   return existingJson;
+// }
 
 async function main() {
   const vueFiles = await fg(["src/pages/**/*.vue"]);
