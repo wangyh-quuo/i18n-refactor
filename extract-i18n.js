@@ -110,7 +110,7 @@ function replaceChineseInTemplate(templateContent, filePath) {
       if (text && /[\u4e00-\u9fa5]/.test(text)) {
         const key = getKeyByText(text, prefix);
         replacements.push({
-          original: node.content.content,
+          original: text,
           replacement: `{{ $t('${key}') }}`,
         });
       }
@@ -161,27 +161,36 @@ function replaceChineseInTemplate(templateContent, filePath) {
 
 function extractChineseFromScript(content, filePath) {
   const prefix = getPagePrefix(filePath);
-  const stringReg = /(['"`])((?:\\\1|.)*?[\u4e00-\u9fa5]+.*?)(\1)/g;
-  let replaced = content;
+  const chineseRegexp = /(["'`])([^"'`\n]*[\u4e00-\u9fa5]+[^"'`\n]*)\1/g;
+  const replacements = [];
+
   let match;
-  const done = new Set();
-
-  while ((match = stringReg.exec(content)) !== null) {
-    const fullMatch = match[0];
+  while ((match = chineseRegexp.exec(content)) !== null) {
     const quote = match[1];
-    const text = match[2];
+    const raw = match[2];
+    const fullMatch = match[0];
 
-    if (done.has(fullMatch)) continue;
-    done.add(fullMatch);
-
-    const key = getKeyByText(text, prefix);
+    const key = getKeyByText(raw, prefix);
     const replacement = `t('${key}')`;
 
-    replaced = replaced.replace(fullMatch, replacement);
+    // 保证只替换值部分，不误替换整体结构
+    replacements.push({
+      original: fullMatch,
+      replacement
+    });
   }
 
-  return replaced;
+  // 避免重复替换
+  replacements.sort((a, b) => b.original.length - a.original.length);
+
+  let result = content;
+  for (const { original, replacement } of replacements) {
+    result = result.replace(new RegExp(escapeRegExp(original), "g"), replacement);
+  }
+
+  return result;
 }
+
 
 function escapeRegExp(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
