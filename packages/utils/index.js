@@ -1,12 +1,12 @@
 const fs = require("fs");
-const path = require("path");
+const config = require("../config");
 
 /**
  * 获取已存在的 zh.json 文件内容
  * @returns {Object} 解析后的 JSON 对象
  */
 function getExistingJson() {
-  const zhFilePath = "locales/zh.json";
+  const zhFilePath = config.output.json;
 
   let existingJson = {};
   if (fs.existsSync(zhFilePath)) {

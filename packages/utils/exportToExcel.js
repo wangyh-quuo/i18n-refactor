@@ -59,6 +59,10 @@ function exportToExcelByModule(mergedJson, outputPath = "./output/i18n.xlsx") {
     const sheet = xlsx.utils.json_to_sheet(data);
     xlsx.utils.book_append_sheet(workbook, sheet, moduleKey);
   }
+  if (workbook.SheetNames.length === 0) {
+    console.log("❌ 未找到任何数据，导出取消。");
+    return;
+  }
 
   xlsx.writeFile(workbook, fullPath);
   console.log(`✅ Excel（多 Sheet）导出成功: ${fullPath}`);

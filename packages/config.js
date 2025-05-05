@@ -26,10 +26,4 @@ module.exports = {
     const idx = parts.indexOf('pages');
     return idx !== -1 && parts.length > idx + 1 ? parts[idx + 1] : 'common';
   },
-
-  // Excel 导出是否每个模块一个 sheet
-  excelByModule: true,
-
-  // 是否保留 key 排序（按原始顺序 or 字母序）
-  sortKeys: true,
 };
