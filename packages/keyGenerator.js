@@ -1,3 +1,5 @@
+const md5 = require('md5');
+const config = require('./config');
 const { getExistingJson } = require('./utils');
 
 const zhMap = {};
@@ -60,15 +62,22 @@ function getKeyByText(text, prefix) {
   // 如果已经存在，则直接返回对应的 key
   if (existingKeys[clean]) return existingKeys[clean];
 
-  let id = lastIds[prefix] || 0; // 获取当前模块的最后一个 id，没有则从 0 开始
-  // 生成新的 key
-  const key = `${prefix}.key_${++id}`;
+  let key = '';
+
+  if (config.keyStrategy === 'prefix_increment') {
+    let id = lastIds[prefix] || 0; // 获取当前模块的最后一个 id，没有则从 0 开始
+    // 生成新的 key
+    key = `${prefix}.key_${++id}`;
+    // 更新模块的 ID
+    lastIds[prefix] = id;
+  } else if (config.keyStrategy === 'hash')  {
+    const hash = md5(text).slice(0, 8); // 可控制长度
+    key = `${prefix}.${hash}`;
+  }
+
   existingKeys[clean] = key; // 记录该中文和 key 的映射关系
-
-  // 更新模块的 ID
-  lastIds[prefix] = id;
-
   zhMap[key] = clean; // 添加到最终的 zhMap
+ 
   return key;
 }
 

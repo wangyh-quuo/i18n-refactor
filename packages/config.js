@@ -17,13 +17,5 @@ module.exports = {
   exportExcel: true,
 
   // key 生成规则（可以后面提供多个策略）
-  keyStrategy: 'prefix_increment', // or 'hash', 'fullpath'
-
-  // 模块分组规则
-  getPrefixFromPath: (filePath) => {
-    const posixPath = filePath.replace(/\\/g, '/');
-    const parts = posixPath.split('/');
-    const idx = parts.indexOf('pages');
-    return idx !== -1 && parts.length > idx + 1 ? parts[idx + 1] : 'common';
-  },
+  keyStrategy: 'prefix_increment', // prefix_increment or 'hash'
 };

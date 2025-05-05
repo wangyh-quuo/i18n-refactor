@@ -12,6 +12,7 @@
     "@vue/compiler-dom": "^3.5.13",
     "@vue/compiler-sfc": "^3.5.13",
     "fast-glob": "^3.3.3",
+    "md5": "^2.3.0",
     "xlsx": "^0.18.5"
   }
 }

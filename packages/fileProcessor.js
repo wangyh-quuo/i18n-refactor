@@ -4,6 +4,7 @@ const { parse } = require("@vue/compiler-sfc");
 const { compile } = require("@vue/compiler-dom");
 const { getKeyByText } = require('./keyGenerator');
 const { escapeRegExp } = require('./utils/index');
+const config = require("./config");
 
 /**
  * 获取页面模块前缀
@@ -12,10 +13,11 @@ const { escapeRegExp } = require('./utils/index');
  */
 function getPagePrefix(filePath) {
   const normalized = path.normalize(filePath); // 保证是平台风格路径
-  const segments = normalized.split(path.sep);
-  const pagesIndex = segments.indexOf("pages");
-  if (pagesIndex >= 0 && segments.length > pagesIndex + 1) {
-    return segments[pagesIndex + 1]; // 如 "home"
+  const sourceDir = path.normalize(config.sourceDir + '/');
+  const segments = normalized.replace(sourceDir, '').split(path.sep);
+  // 不包含.后缀的文件夹名称作为模块前缀
+  if (segments.length > 0 && segments[0].indexOf('.') === -1) {
+    return segments[0]; // 如 "home"
   }
   return "common"; // fallback
 }
