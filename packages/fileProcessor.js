@@ -44,6 +44,12 @@ function replaceChineseInTemplate(templateContent, filePath) {
         });
       }
     }
+    // if
+    else if(node.type === 9) {
+      if (node.branches) {
+        node.branches.forEach(walk);
+      }
+    }
     // 插槽
     else if (node.type === 12) {
       const text = node.content.content?.trim?.();
