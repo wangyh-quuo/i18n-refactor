@@ -40,6 +40,7 @@ function replaceChineseInTemplate(templateContent, filePath) {
         const key = getKeyByText(text, prefix);
         replacements.push({
           original: text,
+          source: node.loc.source, // 换行文本兼容处理
           replacement: `{{ $t('${key}') }}`,
         });
       }
@@ -94,10 +95,11 @@ function replaceChineseInTemplate(templateContent, filePath) {
   // 避免重复替换：长字符串先替换
   replacements.sort((a, b) => b.original.length - a.original.length);
 
-  for (const { original, replacement } of replacements) {
+  for (const { original, replacement, source } of replacements) {
+    let replaceText = source ?? original
     // 使用非贪婪替换，避免标签错位
     result = result.replace(
-      new RegExp(`(?<!\\{\\{\\s*)${escapeRegExp(original)}(?!\\s*\\}\\})`, "g"),
+      new RegExp(`(?<!\\{\\{\\s*)${escapeRegExp(replaceText)}(?!\\s*\\}\\})`, "g"),
       replacement
     );
   }
