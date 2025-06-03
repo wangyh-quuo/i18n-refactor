@@ -178,7 +178,7 @@ function processScriptFile(filePath) {
   const content = fs.readFileSync(filePath, "utf-8");
   const prefix = getPagePrefix(filePath);
 
-  const stringReg = /(['"`])((?:\\\1|.)*?[\u4e00-\u9fa5]+.*?)(\1)/g;
+  const stringReg = /(['"`])((?:\\\1|[\s\S])*?[\u4e00-\u9fa5]+[\s\S]*?)(\1)/g;
   let replaced = content;
   let match;
   const done = new Set();
