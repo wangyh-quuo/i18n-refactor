@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "i18n": "node ./i18n-cli.js"
+    "i18n": "node ./i18n-cli.js",
+    "scan": "node ./packages/bin/scan.js"
   },
   "author": "",
   "license": "ISC",
