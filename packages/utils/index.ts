@@ -1,11 +1,11 @@
-const fs = require("fs");
-const config = require("../config");
+import fs from "fs";
+import config from "../config";
 
 /**
  * 获取已存在的 zh.json 文件内容
  * @returns {Object} 解析后的 JSON 对象
  */
-function getExistingJson() {
+export function getExistingJson() {
   const zhFilePath = config.output.json;
 
   let existingJson = {};
@@ -21,7 +21,7 @@ function getExistingJson() {
  * @param {Object} newJson 新生成的 JSON 对象
  * @returns {Object} 合并后的 JSON 对象
  */
-function mergeZhJson(newJson) {
+export function mergeZhJson(newJson) {
   const existingJson = getExistingJson();
   // 使用递归合并现有的 JSON 和新生成的 JSON
   function deepMerge(target, source) {
@@ -46,7 +46,7 @@ function mergeZhJson(newJson) {
  * @param {Object} flatObj 扁平对象
  * @returns {Object} 嵌套对象
  */
-function flatToNested(flatObj) {
+export function flatToNested(flatObj) {
   const nested = {};
   for (const key in flatObj) {
     const parts = key.split(".");
@@ -66,13 +66,7 @@ function flatToNested(flatObj) {
  * @param {string} str 输入的字符串
  * @returns {string} 转义后的字符串
  */
-function escapeRegExp(str) {
+export function escapeRegExp(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-module.exports = {
-  getExistingJson,
-  mergeZhJson,
-  flatToNested,
-  escapeRegExp
-};

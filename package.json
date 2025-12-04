@@ -2,9 +2,10 @@
   "name": "i18n-tool",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "i18n": "node ./i18n-cli.js",
-    "scan": "node ./packages/bin/scan.js"
+    "i18n": "esno  ./i18n-cli.ts",
+    "scan": "esno ./packages/bin/scan.ts"
   },
   "author": "",
   "license": "ISC",
@@ -15,5 +16,10 @@
     "fast-glob": "^3.3.3",
     "md5": "^2.3.0",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "esno": "^4.8.0",
+    "typescript": "^5.9.3"
   }
 }

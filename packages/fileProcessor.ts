@@ -1,17 +1,17 @@
-const fs = require("fs");
-const path = require("path");
-const { parse } = require("@vue/compiler-sfc");
-const { compile } = require("@vue/compiler-dom");
-const { getKeyByText } = require('./keyGenerator');
-const { escapeRegExp } = require('./utils/index');
-const config = require("./config");
+import fs from "fs";
+import path from "path";
+import { parse } from "@vue/compiler-sfc";
+import { compile } from "@vue/compiler-dom";
+import { getKeyByText } from './keyGenerator';
+import { escapeRegExp } from './utils/index';
+import config from "./config";
 
 /**
  * 获取页面模块前缀
  * @param {string} filePath 文件路径
  * @returns {string} 模块前缀
  */
-function getPagePrefix(filePath) {
+function getPagePrefix(filePath: string): string {
   const normalized = path.normalize(filePath); // 保证是平台风格路径
   const sourceDir = path.normalize(config.sourceDir + '/');
   const segments = normalized.replace(sourceDir, '').split(path.sep);
@@ -149,7 +149,7 @@ function extractChineseFromScript(content, filePath) {
  * 处理 Vue 文件
  * @param {string} filePath 文件路径
  */
-async function processVueFile(filePath) {
+export async function processVueFile(filePath) {
   const raw = fs.readFileSync(filePath, "utf-8");
   const { descriptor } = parse(raw);
   if (!descriptor.template) return;
@@ -174,7 +174,7 @@ async function processVueFile(filePath) {
  * 处理 JS/TS 文件
  * @param {string} filePath 文件路径
  */
-function processScriptFile(filePath) {
+export function processScriptFile(filePath) {
   const content = fs.readFileSync(filePath, "utf-8");
   const prefix = getPagePrefix(filePath);
 
@@ -201,8 +201,3 @@ function processScriptFile(filePath) {
   fs.writeFileSync(filePath, replaced, "utf-8");
   console.log(`🔧 JS/TS 替换完成: ${filePath}`);
 }
-
-module.exports = {
-  processVueFile,
-  processScriptFile
-};

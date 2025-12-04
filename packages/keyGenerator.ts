@@ -1,8 +1,8 @@
-const md5 = require('md5');
-const config = require('./config');
-const { getExistingJson } = require('./utils');
+import md5 from 'md5';
+import config from './config';
+import { getExistingJson } from './utils';
 
-const zhMap = {};
+export const zhMap = {};
 const existingJson = getExistingJson();
 // 获取该模块的最后一个 id
 const lastIds = getLastKeyId(existingJson);
@@ -56,7 +56,7 @@ function initExistingKeys(existingJson) {
  * @param {string} prefix 模块前缀
  * @returns {string} 唯一的 key
  */
-function getKeyByText(text, prefix) {
+export function getKeyByText(text, prefix) {
   const clean = text.trim();
 
   // 如果已经存在，则直接返回对应的 key
@@ -80,8 +80,3 @@ function getKeyByText(text, prefix) {
  
   return key;
 }
-
-module.exports = {
-  getKeyByText,
-  zhMap
-};

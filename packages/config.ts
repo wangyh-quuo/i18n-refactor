@@ -1,6 +1,6 @@
 // i18n.config.js（或 config.ts）
 
-module.exports = {
+export default {
   // 要扫描的目录
   sourceDir: 'src/pages',
 

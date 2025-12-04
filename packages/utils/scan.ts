@@ -1,4 +1,4 @@
-const fs = require("fs");
+import fs from "fs";
 
 
 const chineseRegexp = /[\u4e00-\u9fa5]/g;
