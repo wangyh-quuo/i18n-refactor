@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { parse } from "@vue/compiler-sfc";
-import { compile } from "@vue/compiler-dom";
+import { compile, NodeTypes, type RootNode, type TemplateChildNode } from "@vue/compiler-dom";
 import { getKeyByText } from './keyGenerator';
 import { escapeRegExp } from './utils/index';
 import config from "./config";
@@ -16,8 +16,8 @@ function getPagePrefix(filePath: string): string {
   const sourceDir = path.normalize(config.sourceDir + '/');
   const segments = normalized.replace(sourceDir, '').split(path.sep);
   // 不包含.后缀的文件夹名称作为模块前缀
-  if (segments.length > 0 && segments[0].indexOf('.') === -1) {
-    return segments[0]; // 如 "home"
+  if (segments.length > 0 && segments[0]!.indexOf('.') === -1) {
+    return segments[0]!; // 如 "home"
   }
   return "common"; // fallback
 }
@@ -28,13 +28,13 @@ function getPagePrefix(filePath: string): string {
  * @param {string} filePath 文件路径
  * @returns {string} 替换后的模板内容
  */
-function replaceChineseInTemplate(templateContent, filePath) {
+function replaceChineseInTemplate(templateContent: string, filePath: string) {
   const ast = compile(templateContent, { mode: "module" }).ast;
   const prefix = getPagePrefix(filePath);
-  const replacements = [];
+  const replacements: { original: any; source?: any; replacement: string; }[] = [];
 
-  function walk(node) {
-    if (node.type === 2) {
+  function walk(node: RootNode | TemplateChildNode) {
+    if (node.type === NodeTypes.TEXT) {
       const text = node.content.trim();
       if (text && /[\u4e00-\u9fa5]/.test(text)) {
         const key = getKeyByText(text, prefix);
@@ -46,13 +46,13 @@ function replaceChineseInTemplate(templateContent, filePath) {
       }
     }
     // if
-    else if(node.type === 9) {
+    else if(node.type === NodeTypes.IF) {
       if (node.branches) {
         node.branches.forEach(walk);
       }
     }
     // 插槽
-    else if (node.type === 12) {
+    else if (node.type === NodeTypes.TEXT_CALL) {
       const text = node.content.content?.trim?.();
       if (text && /[\u4e00-\u9fa5]/.test(text)) {
         const key = getKeyByText(text, prefix);
@@ -63,10 +63,10 @@ function replaceChineseInTemplate(templateContent, filePath) {
       }
     }
     // 2. 标签属性中的中文
-    else if (node.type === 1 && node.props) {
+    else if (node.type === NodeTypes.ELEMENT && node.props) {
       for (const prop of node.props) {
         if (
-          prop.type === 6 && // ATTRIBUTE
+          prop.type === NodeTypes.ATTRIBUTE && // ATTRIBUTE
           prop.value &&
           /[\u4e00-\u9fa5]/.test(prop.value.content)
         ) {
@@ -113,18 +113,18 @@ function replaceChineseInTemplate(templateContent, filePath) {
  * @param {string} filePath 文件路径
  * @returns {string} 替换后的脚本内容
  */
-function extractChineseFromScript(content, filePath) {
+function extractChineseFromScript(content: string, filePath: string) {
   const prefix = getPagePrefix(filePath);
   const chineseRegexp = /(["'`])([^"'`\n]*[\u4e00-\u9fa5]+[^"'`\n]*)\1/g;
   const replacements = [];
 
   let match;
   while ((match = chineseRegexp.exec(content)) !== null) {
-    const quote = match[1];
+    // const quote = match[1];
     const raw = match[2];
     const fullMatch = match[0];
 
-    const key = getKeyByText(raw, prefix);
+    const key = getKeyByText(raw ?? '', prefix);
     const replacement = `t('${key}')`;
 
     // 保证只替换值部分，不误替换整体结构
@@ -149,7 +149,7 @@ function extractChineseFromScript(content, filePath) {
  * 处理 Vue 文件
  * @param {string} filePath 文件路径
  */
-export async function processVueFile(filePath) {
+export async function processVueFile(filePath: string) {
   const raw = fs.readFileSync(filePath, "utf-8");
   const { descriptor } = parse(raw);
   if (!descriptor.template) return;
@@ -160,9 +160,9 @@ export async function processVueFile(filePath) {
   let scriptReplaced = raw;
   if (descriptor.script || descriptor.scriptSetup) {
     const scriptBlock = descriptor.scriptSetup || descriptor.script;
-    const scriptContent = scriptBlock.content;
-    const replacedScript = extractChineseFromScript(scriptContent, filePath);
-    scriptReplaced = scriptReplaced.replace(scriptContent, replacedScript);
+    const scriptContent = scriptBlock?.content;
+    const replacedScript = extractChineseFromScript(scriptContent ?? '', filePath);
+    scriptReplaced = scriptReplaced.replace(scriptContent ?? '', replacedScript);
   }
 
   const fullReplaced = scriptReplaced.replace(template, templateReplaced);
@@ -174,7 +174,7 @@ export async function processVueFile(filePath) {
  * 处理 JS/TS 文件
  * @param {string} filePath 文件路径
  */
-export function processScriptFile(filePath) {
+export function processScriptFile(filePath: string) {
   const content = fs.readFileSync(filePath, "utf-8");
   const prefix = getPagePrefix(filePath);
 
@@ -185,13 +185,13 @@ export function processScriptFile(filePath) {
 
   while ((match = stringReg.exec(content)) !== null) {
     const fullMatch = match[0];
-    const quote = match[1];
+    // const quote = match[1];
     const text = match[2];
 
     if (done.has(fullMatch)) continue;
     done.add(fullMatch);
 
-    const key = getKeyByText(text, prefix);
+    const key = getKeyByText(text ?? '', prefix);
     const replacement = `t('${key}')`;
 
     // 精准替换一次

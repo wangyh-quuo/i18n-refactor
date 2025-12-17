@@ -7,7 +7,7 @@ import fs from "fs";
  * @param {object} zhMap 形式为 { key: zh }
  * @param {string} outputPath Excel 文件路径
  */
-export function exportToExcel(zhMap, outputPath = "./output/i18n.xlsx") {
+export function exportToExcel(zhMap: Record<string, string>, outputPath = "./output/i18n.xlsx") {
   const fullPath = path.resolve(outputPath);
   const outputDir = path.dirname(fullPath);
 
@@ -37,7 +37,7 @@ export function exportToExcel(zhMap, outputPath = "./output/i18n.xlsx") {
  * @param {object} mergedJson 合并后的 JSON，如 { home: { key_1: '首页' } }
  * @param {string} outputPath Excel 输出路径
  */
-export function exportToExcelByModule(mergedJson, outputPath = "./output/i18n.xlsx") {
+export function exportToExcelByModule(mergedJson: Record<string, any>, outputPath = "./output/i18n.xlsx") {
   const fullPath = path.resolve(outputPath);
   const outputDir = path.dirname(fullPath);
 

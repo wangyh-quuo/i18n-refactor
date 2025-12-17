@@ -2,7 +2,7 @@ import md5 from 'md5';
 import config from './config';
 import { getExistingJson } from './utils';
 
-export const zhMap = {};
+export const zhMap: Record<string, string> = {};
 const existingJson = getExistingJson();
 // 获取该模块的最后一个 id
 const lastIds = getLastKeyId(existingJson);
@@ -14,16 +14,16 @@ const existingKeys = initExistingKeys(existingJson);
  * @param {Object} existingJson 已存在的 JSON 对象
  * @returns {Object} 每个模块的最后一个 id
  */
-function getLastKeyId(existingJson) {
-  const lastIds = {};
+function getLastKeyId(existingJson: Record<string, any>) {
+  const lastIds: Record<string, number> = {};
 
-  function traverse(obj, prefix = null) {
+  function traverse(obj: Record<string, any>, prefix: string | null = null) {
     for (const key in obj) {
       if (typeof obj[key] === "object" && !Array.isArray(obj[key])) {
         traverse(obj[key], key);
       } else if (key.startsWith("key_")) {
-        const id = parseInt(key.split("_")[1]);
-        if (!lastIds[prefix] || id > lastIds[prefix]) {
+        const id = parseInt(key.split("_")[1]!);
+        if (prefix && (!lastIds[prefix] || id > lastIds[prefix])) {
           lastIds[prefix] = id;
         }
       }
@@ -38,13 +38,13 @@ function getLastKeyId(existingJson) {
  * @param {Object} existingJson 已存在的 JSON 对象
  * @returns {Object} 中文文本和 key 的映射关系
  */
-function initExistingKeys(existingJson) {
-  const map = {};
+function initExistingKeys(existingJson: Record<string, any>) {
+  const map: Record<string, string> = {};
   for (const module in existingJson) {
     const group = existingJson[module];
     for (const key in group) {
       const value = group[key];
-      map[value] = `${module}.${key}`;
+      map[value!] = `${module}.${key}`;
     }
   }
   return map;
@@ -56,7 +56,7 @@ function initExistingKeys(existingJson) {
  * @param {string} prefix 模块前缀
  * @returns {string} 唯一的 key
  */
-export function getKeyByText(text, prefix) {
+export function getKeyByText(text: string, prefix: string) {
   const clean = text.trim();
 
   // 如果已经存在，则直接返回对应的 key

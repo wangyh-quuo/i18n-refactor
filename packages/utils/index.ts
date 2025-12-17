@@ -8,7 +8,7 @@ import config from "../config";
 export function getExistingJson() {
   const zhFilePath = config.output.json;
 
-  let existingJson = {};
+  let existingJson: Record<string, any> = {};
   if (fs.existsSync(zhFilePath)) {
     const existingContent = fs.readFileSync(zhFilePath, "utf-8");
     existingJson = JSON.parse(existingContent);
@@ -21,10 +21,10 @@ export function getExistingJson() {
  * @param {Object} newJson 新生成的 JSON 对象
  * @returns {Object} 合并后的 JSON 对象
  */
-export function mergeZhJson(newJson) {
+export function mergeZhJson(newJson: Record<string, any>) {
   const existingJson = getExistingJson();
   // 使用递归合并现有的 JSON 和新生成的 JSON
-  function deepMerge(target, source) {
+  function deepMerge(target: Record<string, any>, source: Record<string, any>) {
     for (const key in source) {
       if (source.hasOwnProperty(key)) {
         if (typeof source[key] === "object" && !Array.isArray(source[key])) {
@@ -46,8 +46,8 @@ export function mergeZhJson(newJson) {
  * @param {Object} flatObj 扁平对象
  * @returns {Object} 嵌套对象
  */
-export function flatToNested(flatObj) {
-  const nested = {};
+export function flatToNested(flatObj: Record<string, string>) {
+  const nested: Record<string, any> = {};
   for (const key in flatObj) {
     const parts = key.split(".");
     let current = nested;
@@ -66,7 +66,7 @@ export function flatToNested(flatObj) {
  * @param {string} str 输入的字符串
  * @returns {string} 转义后的字符串
  */
-export function escapeRegExp(str) {
+export function escapeRegExp(str: string) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
