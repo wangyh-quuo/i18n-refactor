@@ -14,10 +14,12 @@
     "@vue/compiler-dom": "^3.5.13",
     "@vue/compiler-sfc": "^3.5.13",
     "fast-glob": "^3.3.3",
+    "magic-string": "^0.30.21",
     "md5": "^2.3.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@types/md5": "^2.3.6",
     "@types/node": "^24.10.1",
     "esno": "^4.8.0",
     "typescript": "^5.9.3"

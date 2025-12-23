@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
 import { parse } from "@vue/compiler-sfc";
-import { compile, NodeTypes, type RootNode, type TemplateChildNode } from "@vue/compiler-dom";
+import MagicString from 'magic-string';
+import { compile, NodeTypes, type RootNode, type SourceLocation, type TemplateChildNode } from "@vue/compiler-dom";
 import { getKeyByText } from './keyGenerator';
 import { escapeRegExp } from './utils/index';
 import config from "./config";
@@ -22,6 +23,38 @@ function getPagePrefix(filePath: string): string {
   return "common"; // fallback
 }
 
+function getSourceReplacePosition(sourceLocation: SourceLocation) {
+  const source = sourceLocation.source;
+  let start = 0;
+  let end = source.length;
+
+  // 去掉前面的纯缩进（空格 + 换行）
+  while (
+    start < end &&
+    (source[start] === ' ' ||
+     source[start] === '\n' ||
+     source[start] === '\r' ||
+     source[start] === '\t')
+  ) {
+    start++;
+  }
+
+  // 去掉尾部的纯缩进
+  while (
+    end > start &&
+    (source[end - 1] === ' ' ||
+     source[end - 1] === '\n' ||
+     source[end - 1] === '\r' ||
+     source[end - 1] === '\t')
+  ) {
+    end--;
+  }
+  return {
+    start: start + sourceLocation.start.offset,
+    end: sourceLocation.end.offset - (source.length - end),
+  }
+}
+
 /**
  * 替换模板中的中文文本
  * @param {string} templateContent 模板内容
@@ -31,17 +64,18 @@ function getPagePrefix(filePath: string): string {
 function replaceChineseInTemplate(templateContent: string, filePath: string) {
   const ast = compile(templateContent, { mode: "module" }).ast;
   const prefix = getPagePrefix(filePath);
-  const replacements: { original: any; source?: any; replacement: string; }[] = [];
+  const replacements: { start: number; end: number; original: string; source?: any; replacement: string; }[] = [];
 
-  function walk(node: RootNode | TemplateChildNode) {
+  function walk(node: RootNode | TemplateChildNode, replacement?: (k: string) => string) {
     if (node.type === NodeTypes.TEXT) {
       const text = node.content.trim();
       if (text && /[\u4e00-\u9fa5]/.test(text)) {
         const key = getKeyByText(text, prefix);
         replacements.push({
+          ...getSourceReplacePosition(node.loc),
           original: text,
           source: node.loc.source, // 换行文本兼容处理
-          replacement: `{{ $t('${key}') }}`,
+          replacement: replacement? replacement(key) : `{{ $t('${key}') }}`,
         });
       }
     }
@@ -53,33 +87,43 @@ function replaceChineseInTemplate(templateContent: string, filePath: string) {
     }
     // 插槽
     else if (node.type === NodeTypes.TEXT_CALL) {
-      const text = node.content.content?.trim?.();
-      if (text && /[\u4e00-\u9fa5]/.test(text)) {
-        const key = getKeyByText(text, prefix);
-        replacements.push({
-          original: text,
-          replacement: `{{ $t('${key}') }}`,
-        });
-      }
+      walk(node.content);
     }
     // 2. 标签属性中的中文
     else if (node.type === NodeTypes.ELEMENT && node.props) {
-      for (const prop of node.props) {
-        if (
-          prop.type === NodeTypes.ATTRIBUTE && // ATTRIBUTE
-          prop.value &&
-          /[\u4e00-\u9fa5]/.test(prop.value.content)
-        ) {
-          const raw = prop.value.content;
-          const key = getKeyByText(raw, prefix);
-          const attrName = prop.name;
-
-          // 替换整个属性为 :attr="$t('key')"
-          replacements.push({
-            original: `${attrName}="${raw}"`,
-            replacement: `:${attrName}="$t('${key}')"`,
-          });
-        }
+      node.props.forEach(prop => walk(prop));
+    }
+    // 属性
+    else if (node.type === NodeTypes.ATTRIBUTE) { 
+      const nameLoc = node.nameLoc;
+      // 非动态绑定属性才需要添加 : 前缀
+      if(!nameLoc.source.startsWith(':')) {
+        replacements.push({
+          ...getSourceReplacePosition(nameLoc),
+          original: nameLoc.source,
+          replacement: `:${nameLoc.source}`,
+        });
+      }
+      // 处理属性值中的中文
+      if (node.value) {
+        walk(node.value, (k) => `"$t('${k}')"`);
+      }
+    }
+    // 指令
+    else if (node.type === NodeTypes.DIRECTIVE) { 
+      if (!node.exp) {
+        return
+      }
+      const exp = node.exp;
+      const text = exp.content.trim();
+      if (text && /[\u4e00-\u9fa5]/.test(text)) {
+        const key = getKeyByText(text, prefix);
+        replacements.push({
+          ...getSourceReplacePosition(exp.loc),
+          original: text,
+          source: exp.loc.source, // 换行文本兼容处理
+          replacement: replacement ? replacement(key) : `$t('${key}')`,
+        });
       }
     }
 
@@ -90,21 +134,16 @@ function replaceChineseInTemplate(templateContent: string, filePath: string) {
 
   walk(ast);
 
-  let result = templateContent;
+  const result = new MagicString(templateContent);
 
   // 避免重复替换：长字符串先替换
   replacements.sort((a, b) => b.original.length - a.original.length);
 
-  for (const { original, replacement, source } of replacements) {
-    let replaceText = source ?? original
-    // 使用非贪婪替换，避免标签错位
-    result = result.replace(
-      new RegExp(`(?<!\\{\\{\\s*)${escapeRegExp(replaceText)}(?!\\s*\\}\\})`, "g"),
-      replacement
-    );
+  for (const { start, end, replacement } of replacements) {
+    result.overwrite(start, end, replacement);
   }
 
-  return result;
+  return result.toString();
 }
 
 /**
