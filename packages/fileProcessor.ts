@@ -2,10 +2,22 @@ import fs from "fs";
 import path from "path";
 import { parse } from "@vue/compiler-sfc";
 import MagicString from 'magic-string';
-import { compile, NodeTypes, type RootNode, type SourceLocation, type TemplateChildNode } from "@vue/compiler-dom";
+import { 
+  compile,
+  NodeTypes,
+  type ParentNode,
+  type SourceLocation,
+  type ExpressionNode,
+  type TemplateChildNode,
+  type AttributeNode,
+  type DirectiveNode,
+} from "@vue/compiler-dom";
 import { getKeyByText } from './keyGenerator';
 import { escapeRegExp } from './utils/index';
 import config from "./config";
+
+type AllNode = ParentNode | ExpressionNode | TemplateChildNode | AttributeNode | DirectiveNode;
+
 
 /**
  * 获取页面模块前缀
@@ -66,7 +78,7 @@ function replaceChineseInTemplate(templateContent: string, filePath: string) {
   const prefix = getPagePrefix(filePath);
   const replacements: { start: number; end: number; original: string; source?: any; replacement: string; }[] = [];
 
-  function walk(node: RootNode | TemplateChildNode, replacement?: (k: string) => string) {
+  function walk(node: AllNode, replacement?: (k: string) => string) {
     if (node.type === NodeTypes.TEXT) {
       const text = node.content.trim();
       if (text && /[\u4e00-\u9fa5]/.test(text)) {
@@ -82,7 +94,7 @@ function replaceChineseInTemplate(templateContent: string, filePath: string) {
     // if
     else if(node.type === NodeTypes.IF) {
       if (node.branches) {
-        node.branches.forEach(walk);
+        node.branches.forEach(branch => walk(branch));
       }
     }
     // 插槽
@@ -114,21 +126,25 @@ function replaceChineseInTemplate(templateContent: string, filePath: string) {
       if (!node.exp) {
         return
       }
-      const exp = node.exp;
-      const text = exp.content.trim();
-      if (text && /[\u4e00-\u9fa5]/.test(text)) {
-        const key = getKeyByText(text, prefix);
-        replacements.push({
-          ...getSourceReplacePosition(exp.loc),
-          original: text,
-          source: exp.loc.source, // 换行文本兼容处理
-          replacement: replacement ? replacement(key) : `$t('${key}')`,
-        });
-      }
+      walk(node.exp);
     }
 
-    if (node.children) {
-      node.children.forEach(walk);
+    else if (node.type === NodeTypes.SIMPLE_EXPRESSION) {
+        const text = node.content.trim();
+        if (text && /[\u4e00-\u9fa5]/.test(text)) {
+          const key = getKeyByText(text, prefix);
+          replacements.push({
+            ...getSourceReplacePosition(node.loc),
+            original: text,
+            source: node.loc.source,
+            replacement: replacement ? replacement(key) : `$t('${key}')`,
+          });
+        }
+    }
+
+    // ParentNode
+    if ('children' in node && node.children) {
+      node.children.forEach((child) => walk(child as AllNode));
     }
   }
 
@@ -142,7 +158,7 @@ function replaceChineseInTemplate(templateContent: string, filePath: string) {
   for (const { start, end, replacement } of replacements) {
     result.overwrite(start, end, replacement);
   }
-
+  console.log(result.toString());
   return result.toString();
 }
 
