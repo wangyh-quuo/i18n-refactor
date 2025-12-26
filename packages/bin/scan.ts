@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-const { scanDirectoryForChinese } = require('../utils/scan');
-const config = require('../config');
+import { scanDirectoryForChinese } from '../utils/scan';
+import config from '../config';
 
-function scanProject(rootDir) {
+function scanProject(rootDir: string) {
   const results = scanDirectoryForChinese(rootDir);
 
   if (results.length === 0) {

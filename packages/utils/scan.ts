@@ -34,7 +34,7 @@ function scanFileForUntranslated(filePath: fs.PathOrFileDescriptor) {
   return untranslated;
 }
 
-function scanDirectoryForChinese(dir: fs.PathLike) {
+export function scanDirectoryForChinese(dir: fs.PathLike) {
   let results: { file: fs.PathOrFileDescriptor; line: number; text: string; }[] = []
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   entries.forEach((entry) => {
@@ -53,7 +53,3 @@ function scanDirectoryForChinese(dir: fs.PathLike) {
   });
   return results;
 }
-
-module.exports = {
-  scanDirectoryForChinese,
-};
