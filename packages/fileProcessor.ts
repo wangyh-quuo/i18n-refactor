@@ -1,6 +1,8 @@
 import fs from "fs";
 import path from "path";
 import { parse } from "@vue/compiler-sfc";
+import { parse as parseBabel } from '@babel/parser';
+import traverse from '@babel/traverse';
 import MagicString from 'magic-string';
 import { 
   compile,
@@ -14,7 +16,6 @@ import {
   type CompoundExpressionNode,
 } from "@vue/compiler-dom";
 import { getKeyByText } from './keyGenerator';
-import { escapeRegExp } from './utils/index';
 import config from "./config";
 
 type AllNode = ParentNode | ExpressionNode | TemplateChildNode | AttributeNode | DirectiveNode;
@@ -211,35 +212,49 @@ function replaceChineseInTemplate(templateContent: string, filePath: string) {
  * @returns {string} 替换后的脚本内容
  */
 function extractChineseFromScript(content: string, filePath: string) {
-  const prefix = getPagePrefix(filePath);
-  const chineseRegexp = /(["'`])([^"'`\n]*[\u4e00-\u9fa5]+[^"'`\n]*)\1/g;
-  const replacements = [];
+  const ast = parseBabel(content, {
+    sourceType: 'module',
+    plugins: ['typescript', 'jsx']
+  });
 
-  let match;
-  while ((match = chineseRegexp.exec(content)) !== null) {
-    // const quote = match[1];
-    const raw = match[2];
-    const fullMatch = match[0];
-
-    const key = getKeyByText(raw ?? '', prefix);
-    const replacement = `t('${key}')`;
-
-    // 保证只替换值部分，不误替换整体结构
-    replacements.push({
-      original: fullMatch,
-      replacement
-    });
-  }
-
-  // 避免重复替换
-  replacements.sort((a, b) => b.original.length - a.original.length);
-
-  let result = content;
-  for (const { original, replacement } of replacements) {
-    result = result.replace(new RegExp(escapeRegExp(original), "g"), replacement);
-  }
-
-  return result;
+  const result = new MagicString(content);
+  
+  traverse.default(ast, {
+    StringLiteral(path) {
+      const { node } = path;
+      if (!/[\u4e00-\u9fff]/.test(node.value)) {
+        return;
+      }
+      // 排除 import / key
+      if (
+        path.parent.type === 'ImportDeclaration' ||
+        (path.parent.type === 'ObjectProperty' &&
+         path.parent.key === node &&
+         !path.parent.computed)
+      )  {
+        return;
+      }
+      const key = getKeyByText(node.value, getPagePrefix(filePath));
+      result.overwrite(node.start, node.end, `t('${key}')`);
+    },
+    // 模板字符串 const msg = `你好${name}同学`; --> `${t('key_1')}${name}${t('key_2')}`
+    TemplateLiteral(path) {
+      const { quasis } = path.node;
+      quasis.forEach(quasi => {
+        const raw = quasi.value.raw;
+        if (!/[\u4e00-\u9fff]/.test(raw)) {
+          return;
+        
+        }
+        if (quasi.start == null || quasi.end == null) {
+          return;
+        }
+        const key = getKeyByText(quasi.value.raw, getPagePrefix(filePath));
+        result.overwrite(quasi.start, quasi.end, `\${t('${key}')}`);
+      });
+    }
+  });
+  return result.toString();
 }
 
 /**
@@ -273,28 +288,7 @@ export async function processVueFile(filePath: string) {
  */
 export function processScriptFile(filePath: string) {
   const content = fs.readFileSync(filePath, "utf-8");
-  const prefix = getPagePrefix(filePath);
-
-  const stringReg = /(['"`])((?:\\\1|[\s\S])*?[\u4e00-\u9fa5]+[\s\S]*?)(\1)/g;
-  let replaced = content;
-  let match;
-  const done = new Set();
-
-  while ((match = stringReg.exec(content)) !== null) {
-    const fullMatch = match[0];
-    // const quote = match[1];
-    const text = match[2];
-
-    if (done.has(fullMatch)) continue;
-    done.add(fullMatch);
-
-    const key = getKeyByText(text ?? '', prefix);
-    const replacement = `t('${key}')`;
-
-    // 精准替换一次
-    replaced = replaced.replace(fullMatch, replacement);
-  }
-
-  fs.writeFileSync(filePath, replaced, "utf-8");
+  const result = extractChineseFromScript(content, filePath);
+  fs.writeFileSync(filePath, result, "utf-8");
   console.log(`🔧 JS/TS 替换完成: ${filePath}`);
 }
