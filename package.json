@@ -4,8 +4,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "i18n": "esno  ./i18n-cli.ts",
-    "scan": "esno ./packages/bin/scan.ts"
+    "i18n": "esno  ./packages/bin/i18n-cli.ts",
+    "scan": "esno ./packages/bin/scan.ts",
+    "build": "rollup -c"
+  },
+  "bin": {
+    "i18n": "./dist/main.esm.js"
   },
   "author": "",
   "license": "ISC",
@@ -16,15 +20,25 @@
     "@vue/compiler-dom": "^3.5.13",
     "@vue/compiler-sfc": "^3.5.13",
     "fast-glob": "^3.3.3",
+    "lodash-es": "^4.17.22",
     "magic-string": "^0.30.21",
     "md5": "^2.3.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@rollup/plugin-typescript": "^12.3.0",
     "@types/babel__traverse": "^7.28.0",
+    "@types/lodash-es": "^4.17.12",
     "@types/md5": "^2.3.6",
-    "@types/node": "^24.10.1",
+    "@types/node": "^24.10.4",
+    "esbuild-wasm": "latest",
     "esno": "^4.8.0",
+    "rollup": "^4.54.0",
+    "rollup-plugin-dts": "^6.3.0",
+    "tslib": "^2.8.1",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "esbuild": "npm:esbuild-wasm@latest"
   }
 }

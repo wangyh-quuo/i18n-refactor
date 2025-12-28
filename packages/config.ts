@@ -1,6 +1,38 @@
-// i18n.config.js（或 config.ts）
+import fs from 'fs'
+import path from 'path'
+import { merge } from 'lodash-es'
 
-export default {
+const targetPath = process.argv[2] || path.resolve('./')
+
+function findProjectConfig(targetPath: string) {
+  let dir = fs.statSync(targetPath).isDirectory()
+    ? targetPath
+    : path.dirname(targetPath)
+
+  const root = path.parse(dir).root
+
+  while (dir !== root) {
+    const configPath = path.join(dir, 'i18n.config.js')
+
+    if (fs.existsSync(configPath)) {
+      return configPath
+    }
+
+    dir = path.dirname(dir)
+  }
+
+  return null
+}
+
+async function loadProjectConfig(configPath: string) {
+  if (!configPath) {
+    return {}
+  }
+  const config = await import(configPath)
+  return config.default || {}
+}
+
+const defaultConfig = {
   // 要扫描的目录
   sourceDir: 'src/pages',
 
@@ -18,4 +50,11 @@ export default {
 
   // key 生成规则（可以后面提供多个策略）
   keyStrategy: 'prefix_increment', // prefix_increment or 'hash'
-};
+}
+
+const projectConfig = await loadProjectConfig(findProjectConfig(path.resolve(targetPath)) || '');
+
+export default merge(
+  defaultConfig, 
+  projectConfig
+);
