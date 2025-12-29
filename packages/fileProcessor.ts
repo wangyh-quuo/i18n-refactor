@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { parse } from "@vue/compiler-sfc";
 import { parse as parseBabel } from '@babel/parser';
-import traverse from '@babel/traverse';
+import traverse from './utils/babelTraverse';
 import MagicString from 'magic-string';
 import { 
   compile,
@@ -219,7 +219,7 @@ function extractChineseFromScript(content: string, filePath: string) {
 
   const result = new MagicString(content);
   
-  traverse.default(ast, {
+  traverse(ast, {
     StringLiteral(path) {
       const { node } = path;
       if (!/[\u4e00-\u9fff]/.test(node.value)) {
@@ -235,7 +235,7 @@ function extractChineseFromScript(content: string, filePath: string) {
         return;
       }
       const key = getKeyByText(node.value, getPagePrefix(filePath));
-      result.overwrite(node.start, node.end, `t('${key}')`);
+      result.overwrite(node.start!, node.end!, `t('${key}')`);
     },
     // 模板字符串 const msg = `你好${name}同学`; --> `${t('key_1')}${name}${t('key_2')}`
     TemplateLiteral(path) {
