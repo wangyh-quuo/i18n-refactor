@@ -78,7 +78,6 @@ function handleCompoundExpression(node: CompoundExpressionNode, prefix: string) 
     let i = 0;
     let tempList: string[] = [];
     children.forEach((child) => {
-      console.log(child)
       if (typeof child === 'object') {
         if (!pos.start) {
           pos.start = child.loc.start.offset;
@@ -94,8 +93,6 @@ function handleCompoundExpression(node: CompoundExpressionNode, prefix: string) 
       }
     });
     const key = getKeyByText(combinedText, prefix);
-    console.log(pos)
-    console.log(combinedText)
     return {
       start: pos.start,
       end: pos.end,
@@ -123,7 +120,6 @@ function replaceChineseInTemplate(templateContent: string, filePath: string) {
   const replacements: { start: number; end: number; original: string; source?: any; replacement: string; }[] = [];
 
   function walk(node: AllNode, replacement?: (k: string) => string) {
-    console.log(node)
     if (node.type === NodeTypes.COMMENT) {
       return;
     }
@@ -257,21 +253,45 @@ function extractChineseFromScript(content: string, filePath: string) {
       const key = getKeyByText(node.value, getPagePrefix(filePath));
       result.overwrite(node.start!, node.end!, `t('${key}')`);
     },
-    // 模板字符串 const msg = `你好${name}同学`; --> `${t('key_1')}${name}${t('key_2')}`
+    // 模板字符串 const msg = `你好${name}同学`; --> `${t('key_1', { 0: name })}`
     TemplateLiteral(path) {
-      const { quasis } = path.node;
-      quasis.forEach(quasi => {
-        const raw = quasi.value.raw;
-        if (!/[\u4e00-\u9fff]/.test(raw)) {
-          return;
-        
-        }
-        if (quasi.start == null || quasi.end == null) {
-          return;
-        }
-        const key = getKeyByText(quasi.value.raw, getPagePrefix(filePath));
-        result.overwrite(quasi.start, quasi.end, `\${t('${key}')}`);
-      });
+      const { quasis, expressions } = path.node;
+      const needReplace = quasis.some(q => /[\u4e00-\u9fa5]/.test(q.value.cooked || q.value.raw)) && 
+       expressions.length && expressions.every(exp => ['Identifier', 'MemberExpression'].includes(exp.type));
+      if (needReplace) {
+        const pos = { start: 0, end: 0 };
+        let combinedText = '';
+        let i = 0;
+        let tempList: string[] = [];
+        const children = [...quasis, ...expressions].sort((a, b) => a.start! - b.start!);
+        children.forEach(child => {
+          if (!pos.start) {
+            pos.start = child.start!;
+          }
+          if (child.type === 'TemplateElement') {
+            combinedText += child.value.cooked || '';
+          } else if (child.type === 'Identifier') {
+            combinedText += `{${i}}`;
+            tempList.push(child.name);
+          }
+          pos.end = child.end!;
+        });
+        const key = getKeyByText(combinedText, getPagePrefix(filePath));
+        result.overwrite(pos.start, pos.end, `\${t('${key}', { ${tempList.map((_, index) => `${index}: ${tempList[index]}`).join(', ')} })}`);
+        return;
+      } else {
+        quasis.forEach(quasi => {
+          const cooked = quasi.value.cooked || quasi.value.raw;
+          if (!/[\u4e00-\u9fff]/.test(cooked)) {
+            return;
+          }
+          if (quasi.start == null || quasi.end == null) {
+            return;
+          }
+          const key = getKeyByText(cooked, getPagePrefix(filePath));
+          result.overwrite(quasi.start, quasi.end, `\${t('${key}')}`);
+        });
+      }
     }
   });
   return result.toString();
