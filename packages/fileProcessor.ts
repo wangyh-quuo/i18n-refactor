@@ -69,21 +69,46 @@ function getSourceReplacePosition(sourceLocation: SourceLocation) {
   }
 }
 
-function classifyCompound(node: CompoundExpressionNode) {
-  let hasText = false;
-  let hasLogic = false;
-
-  for (const c of node.children) {
-    if (typeof c === 'string' && /[\u4e00-\u9fff]/.test(c)) {
-      hasText = true;
-    } else if (typeof c === 'object') {
-      hasLogic = true;
+function handleCompoundExpression(node: CompoundExpressionNode, prefix: string) {
+  const children = node.children;
+  const needReplace = children.every(c => typeof c === 'string' || (typeof c === 'object' && (c.type === NodeTypes.TEXT || c.type === NodeTypes.INTERPOLATION)));
+  if (children.length && needReplace) {
+    const pos = { start: 0, end: 0 };
+    let combinedText = '';
+    let i = 0;
+    let tempList: string[] = [];
+    children.forEach((child) => {
+      console.log(child)
+      if (typeof child === 'object') {
+        if (!pos.start) {
+          pos.start = child.loc.start.offset;
+        }
+        if (child.type === NodeTypes.TEXT) {
+          combinedText += child.content;
+        } else if (child.type === NodeTypes.INTERPOLATION) {
+          combinedText += `{${i}}`;
+          tempList.push(child.content.loc.source);
+          i++;
+        }
+        pos.end = child.loc.end.offset;
+      }
+    });
+    const key = getKeyByText(combinedText, prefix);
+    console.log(pos)
+    console.log(combinedText)
+    return {
+      start: pos.start,
+      end: pos.end,
+      original: node.loc.source,
+      source: node.loc.source,
+      // $t('', { 0: xxx })
+      replacement: `{{ $t('${key}', { ${tempList.map((_, index) => `${index}: ${tempList[index]}`).join(', ')} }) }}`
     }
+  } else {
+    // 混合表达式暂不支持自动替换
+    console.warn('⚠️ 混合表达式暂不支持自动替换，请手动处理:', node.loc.source);
   }
-
-  if (hasText && !hasLogic) return 'TEXT_ONLY';
-  if (hasText && hasLogic) return 'MIXED';
-  return 'NO_TEXT';
+  return null;
 }
 
 /**
@@ -98,6 +123,7 @@ function replaceChineseInTemplate(templateContent: string, filePath: string) {
   const replacements: { start: number; end: number; original: string; source?: any; replacement: string; }[] = [];
 
   function walk(node: AllNode, replacement?: (k: string) => string) {
+    console.log(node)
     if (node.type === NodeTypes.COMMENT) {
       return;
     }
@@ -166,15 +192,9 @@ function replaceChineseInTemplate(templateContent: string, filePath: string) {
       }
     }
     else if (node.type === NodeTypes.COMPOUND_EXPRESSION) {
-      const classify = classifyCompound(node);
-      if (classify === 'TEXT_ONLY') {
-        node.children.forEach((child) => {
-        if (typeof child === 'object') {
-          walk(child);
-        }
-      });
-      } else if (classify === 'MIXED') { 
-        console.warn('⚠️ 混合表达式暂不支持自动替换，请手动处理:', node.loc.source);
+      const compoundReplace = handleCompoundExpression(node, prefix);
+      if (compoundReplace) {
+        replacements.push(compoundReplace);
       }
       return
     }
