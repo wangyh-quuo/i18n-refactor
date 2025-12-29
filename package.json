@@ -1,15 +1,16 @@
 {
   "name": "i18n-tool",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/main.esm.js",
   "type": "module",
   "scripts": {
-    "i18n": "esno  ./packages/bin/i18n-cli.ts",
-    "scan": "esno ./packages/bin/scan.ts",
-    "build": "rollup -c"
+    "i18n": "esno packages/bin/i18n-cli.ts",
+    "scan": "esno packages/bin/scan.ts",
+    "build": "rollup -c",
+    "prepublishOnly": "npm run build"
   },
   "bin": {
-    "i18n": "./dist/main.esm.js"
+    "i18n": "dist/main.esm.js"
   },
   "author": "",
   "license": "ISC",
