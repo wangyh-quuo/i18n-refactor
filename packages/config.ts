@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { merge } from 'lodash-es'
+import { pathToFileURL } from 'url'
 
 const targetPath = process.argv[2] || path.resolve('./')
 
@@ -28,7 +29,8 @@ async function loadProjectConfig(configPath: string) {
   if (!configPath) {
     return {}
   }
-  const config = await import(configPath)
+  const configUrl = pathToFileURL(configPath).href
+  const config = await import(configUrl)
   return config.default || {}
 }
 
