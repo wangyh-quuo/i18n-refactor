@@ -102,8 +102,13 @@ function handleCompoundExpression(node: CompoundExpressionNode, prefix: string) 
       replacement: `{{ $t('${key}', { ${tempList.map((_, index) => `${index}: ${tempList[index]}`).join(', ')} }) }}`
     }
   } else {
+    if (/\$t\(.*\)$/.test(node.loc.source)) {
+      return null  
+    }
     // 混合表达式暂不支持自动替换
-    console.warn('⚠️ 混合表达式暂不支持自动替换，请手动处理:', node.loc.source);
+    if (/[\u4e00-\u9fa5]/.test(node.loc.source)) {
+      console.warn('⚠️ 混合表达式暂不支持自动替换，请手动处理:', node.loc.source);
+    }
   }
   return null;
 }
