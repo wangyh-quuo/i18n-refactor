@@ -8,6 +8,7 @@ import { exportToExcelByModule } from "./utils/exportToExcel";
 import config from './config';
 
 export async function main() {
+  const start = performance.now();
   const vueFiles = await fg([config.sourceDir + "/**/*.vue"]);
   const scriptFiles = await fg([config.sourceDir +  "/**/*.{js,ts}"]);
 
@@ -30,7 +31,9 @@ export async function main() {
     "utf-8"
   );
 
+  const end = performance.now();
   console.log(`\n🎉 全部处理完成！已生成并合并: ${config.output.json}`);
+  console.log(`\n⏱️ 耗时: ${(end - start).toFixed(2)} ms`);
   if (config.exportExcel) {
     exportToExcelByModule(mergedZhJson, config.output.excel);
   }
