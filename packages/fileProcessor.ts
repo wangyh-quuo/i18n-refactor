@@ -155,10 +155,10 @@ function replaceChineseInTemplate(templateContent: string, filePath: string) {
       node.props.forEach(prop => walk(prop));
     }
     // 属性
-    else if (node.type === NodeTypes.ATTRIBUTE) { 
+    else if (node.type === NodeTypes.ATTRIBUTE) {
       const nameLoc = node.nameLoc;
       // 非动态绑定属性才需要添加 : 前缀
-      if(!nameLoc.source.startsWith(':')) {
+      if(!nameLoc.source.startsWith(':') && node.value?.content && /[\u4e00-\u9fa5]/.test(node.value.content)) {
         replacements.push({
           ...getSourceReplacePosition(nameLoc),
           original: nameLoc.source,
