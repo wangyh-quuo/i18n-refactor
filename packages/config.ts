@@ -3,6 +3,21 @@ import path from 'path'
 import { merge } from 'lodash-es'
 import { pathToFileURL } from 'url'
 
+type Config = {
+  sourceDir: string
+  output: {
+    json: string
+    excel: string
+  }
+  languages: string[]
+  exportExcel: boolean
+  keyStrategy: {
+    default: string
+    prefixRoots: string[] // ['src/*']
+  }
+} 
+
+
 const targetPath = process.argv[2] || path.resolve('./')
 
 function findProjectConfig(targetPath: string) {
@@ -34,9 +49,11 @@ async function loadProjectConfig(configPath: string) {
   return config.default || {}
 }
 
-const defaultConfig = {
+const DEFAULT_SOURCE_DIR = 'src'
+
+const defaultConfig: Config = {
   // 要扫描的目录
-  sourceDir: 'src/pages',
+  sourceDir: DEFAULT_SOURCE_DIR,
 
   // 输出的 JSON 和 Excel 路径
   output: {
@@ -51,10 +68,13 @@ const defaultConfig = {
   exportExcel: true,
 
   // key 生成规则（可以后面提供多个策略）
-  keyStrategy: 'prefix_increment', // prefix_increment or 'hash'
+  keyStrategy: {
+    default: 'prefix_increment', // prefix_increment or 'hash'
+    prefixRoots: [`${DEFAULT_SOURCE_DIR}/*`], // 作为模块前缀的根目录列表
+  },
 }
 
-const projectConfig = await loadProjectConfig(findProjectConfig(path.resolve(targetPath)) || '');
+const projectConfig: Config = await loadProjectConfig(findProjectConfig(path.resolve(targetPath)) || '');
 
 export default merge(
   defaultConfig, 

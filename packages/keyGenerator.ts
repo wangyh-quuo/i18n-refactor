@@ -64,13 +64,13 @@ export function getKeyByText(text: string, prefix: string) {
 
   let key = '';
 
-  if (config.keyStrategy === 'prefix_increment') {
+  if (config.keyStrategy.default === 'prefix_increment') {
     let id = lastIds[prefix] || 0; // 获取当前模块的最后一个 id，没有则从 0 开始
     // 生成新的 key
     key = `${prefix}.key_${++id}`;
     // 更新模块的 ID
     lastIds[prefix] = id;
-  } else if (config.keyStrategy === 'hash')  {
+  } else if (config.keyStrategy.default === 'hash')  {
     const hash = md5(text).slice(0, 8); // 可控制长度
     key = `${prefix}.${hash}`;
   }

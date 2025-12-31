@@ -17,6 +17,7 @@ import {
 } from "@vue/compiler-dom";
 import { getKeyByText } from './keyGenerator';
 import config from "./config";
+import { matchRootDir } from "./utils";
 
 type AllNode = ParentNode | ExpressionNode | TemplateChildNode | AttributeNode | DirectiveNode;
 
@@ -27,11 +28,10 @@ type AllNode = ParentNode | ExpressionNode | TemplateChildNode | AttributeNode |
  * @returns {string} 模块前缀
  */
 function getPagePrefix(filePath: string): string {
-  const normalized = path.normalize(filePath); // 保证是平台风格路径
-  const sourceDir = path.normalize(config.sourceDir + '/');
-  const segments = normalized.replace(sourceDir, '').split(path.sep);
-  // 不包含.后缀的文件夹名称作为模块前缀
-  if (segments.length > 0 && segments[0]!.indexOf('.') === -1) {
+  const matchResult = matchRootDir(filePath, config.keyStrategy.prefixRoots);
+  if (matchResult.matched) {
+    const normalized = path.normalize(filePath); // 保证是平台风格路径
+    const segments = normalized.replace(matchResult.root, '').split(path.sep).filter(Boolean);
     return segments[0]!; // 如 "home"
   }
   return "common"; // fallback
