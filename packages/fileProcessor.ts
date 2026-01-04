@@ -120,7 +120,7 @@ function handleCompoundExpression(node: CompoundExpressionNode, prefix: string) 
  * @param {string} filePath 文件路径
  * @returns {string} 替换后的模板内容
  */
-function replaceChineseInTemplate(templateContent: string, filePath: string) {
+export function replaceChineseInTemplate(templateContent: string, filePath: string) {
   const ast = compile(templateContent, { mode: "module" }).ast;
   const prefix = getPagePrefix(filePath);
   const replacements: { start: number; end: number; original: string; source?: any; replacement: string; }[] = [];
@@ -233,7 +233,7 @@ function replaceChineseInTemplate(templateContent: string, filePath: string) {
  * @param {string} filePath 文件路径
  * @returns {string} 替换后的脚本内容
  */
-function extractChineseFromScript(content: string, filePath: string) {
+export function extractChineseFromScript(content: string, filePath: string) {
   const ast = parseBabel(content, {
     sourceType: 'module',
     plugins: ['typescript', 'jsx']

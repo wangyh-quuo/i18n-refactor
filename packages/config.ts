@@ -18,7 +18,8 @@ type Config = {
 } 
 
 
-const targetPath = process.argv[2] || path.resolve('./')
+// const targetPath = process.argv[2] || path.resolve('./')
+const targetPath = path.resolve('./')
 
 function findProjectConfig(targetPath: string) {
   let dir = fs.statSync(targetPath).isDirectory()
