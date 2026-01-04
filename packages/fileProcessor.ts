@@ -189,8 +189,6 @@ export function replaceChineseInTemplate(templateContent: string, filePath: stri
           source: node.loc.source,
           replacement: replacement ? replacement(key) : `$t('${key}')`,
         });
-      } else {
-        console.warn('⚠️ 混合表达式暂不支持自动替换，请手动处理:', node.loc.source);
       }
     }
     else if (node.type === NodeTypes.COMPOUND_EXPRESSION) {
