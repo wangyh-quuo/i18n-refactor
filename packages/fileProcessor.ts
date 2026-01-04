@@ -79,8 +79,9 @@ function handleCompoundExpression(node: CompoundExpressionNode, prefix: string) 
     let tempList: string[] = [];
     children.forEach((child) => {
       if (typeof child === 'object') {
+        const childPos = getSourceReplacePosition(child.loc);
         if (!pos.start) {
-          pos.start = child.loc.start.offset;
+          pos.start = childPos.start;
         }
         if (child.type === NodeTypes.TEXT) {
           combinedText += child.content;
@@ -89,7 +90,7 @@ function handleCompoundExpression(node: CompoundExpressionNode, prefix: string) 
           tempList.push(child.content.loc.source);
           i++;
         }
-        pos.end = child.loc.end.offset;
+        pos.end = childPos.end;
       }
     });
     const key = getKeyByText(combinedText, prefix);
