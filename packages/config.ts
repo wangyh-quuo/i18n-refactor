@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { merge } from 'lodash-es'
+import {  merge } from 'lodash-es'
 import { pathToFileURL } from 'url'
 
 type Config = {
@@ -15,8 +15,8 @@ type Config = {
     default: string
     prefixRoots: string[] // ['src/*']
   }
-} 
-
+  dryRun?: boolean
+}
 
 // const targetPath = process.argv[2] || path.resolve('./')
 const targetPath = path.resolve('./')
@@ -77,7 +77,14 @@ const defaultConfig: Config = {
 
 const projectConfig: Config = await loadProjectConfig(findProjectConfig(path.resolve(targetPath)) || '');
 
-export default merge(
+const config = merge(
   defaultConfig, 
   projectConfig
 );
+
+
+export default config
+
+export function setConfig(newConfig: Partial<Config>) {
+  Object.assign(config, newConfig);
+}

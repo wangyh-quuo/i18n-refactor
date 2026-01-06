@@ -107,3 +107,15 @@ export function matchRootDir(filePath: string, patterns: string[]) {
 export function isChinese(str: string) {
   return /[\u4e00-\u9fa5]/.test(str);
 }
+
+const logSet = new Set<string>();
+
+export function loggerDryRun(filePath: string, source: string, replacement: string) {
+  if (config.dryRun) {
+    if (!logSet.has(`${filePath}`)) {
+      logSet.add(`${filePath}`);
+      console.log(`[DRY RUN] Would modify: ${filePath}`);
+    }
+    console.log(`[DRY RUN] Would add key: ${replacement} from ${source.trim()}`);
+  }
+}

@@ -17,7 +17,7 @@ import {
 } from "@vue/compiler-dom";
 import { getKeyByText } from './keyGenerator';
 import config from "./config";
-import { isChinese, matchRootDir } from "./utils";
+import { isChinese, loggerDryRun, matchRootDir } from "./utils";
 
 type AllNode = ParentNode | ExpressionNode | TemplateChildNode | AttributeNode | DirectiveNode;
 
@@ -253,11 +253,9 @@ export function replaceChineseInTemplate(templateContent: string, filePath: stri
 
   const result = new MagicString(templateContent);
 
-  // 避免重复替换：长字符串先替换
-  replacements.sort((a, b) => b.original.length - a.original.length);
-
-  for (const { start, end, replacement } of replacements) {
-    result.overwrite(start, end, replacement);
+  for (const r of replacements) {
+    result.overwrite(r.start, r.end, r.replacement);
+    loggerDryRun(filePath, r.source, r.replacement);
   }
   return result.toString();
 }
@@ -319,6 +317,7 @@ export function extractChineseFromScript(content: string, filePath: string) {
         });
         const key = getKeyByText(combinedText, getPagePrefix(filePath));
         result.overwrite(pos.start, pos.end, `\${t('${key}', { ${tempList.map((_, index) => `${index}: ${tempList[index]}`).join(', ')} })}`);
+        loggerDryRun(filePath, combinedText, `\${t('${key}', { ${tempList.map((_, index) => `${index}: ${tempList[index]}`).join(', ')} })}`);
         return;
       } else {
         quasis.forEach(quasi => {
@@ -331,6 +330,7 @@ export function extractChineseFromScript(content: string, filePath: string) {
           }
           const key = getKeyByText(cooked, getPagePrefix(filePath));
           result.overwrite(quasi.start, quasi.end, `\${t('${key}')}`);
+          loggerDryRun(filePath, cooked, `\${t('${key}')}`);
         });
       }
     }
@@ -358,9 +358,11 @@ export async function processVueFile(filePath: string) {
     scriptReplaced = scriptReplaced.replace(scriptContent ?? '', replacedScript);
   }
 
-  const fullReplaced = scriptReplaced.replace(template, templateReplaced);
-  fs.writeFileSync(filePath, fullReplaced, "utf-8");
-  console.log(`✅ 替换完成: ${filePath}`);
+  if (!config.dryRun) {
+    const fullReplaced = scriptReplaced.replace(template, templateReplaced);
+    fs.writeFileSync(filePath, fullReplaced, "utf-8");
+    console.log(`✅ 替换完成: ${filePath}`);
+  }
 }
 
 /**
@@ -370,6 +372,8 @@ export async function processVueFile(filePath: string) {
 export function processScriptFile(filePath: string) {
   const content = fs.readFileSync(filePath, "utf-8");
   const result = extractChineseFromScript(content, filePath);
-  fs.writeFileSync(filePath, result, "utf-8");
-  console.log(`🔧 JS/TS 替换完成: ${filePath}`);
+  if (!config.dryRun) {
+    fs.writeFileSync(filePath, result, "utf-8");
+    console.log(`🔧 JS/TS 替换完成: ${filePath}`);
+  }
 }
