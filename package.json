@@ -1,5 +1,5 @@
 {
-  "name": "i18n-tool",
+  "name": "i18n-refactor",
   "version": "1.0.0",
   "main": "dist/main.esm.js",
   "type": "module",
@@ -11,11 +11,12 @@
     "test": "mocha"
   },
   "bin": {
-    "i18n": "dist/main.esm.js"
+    "i18n-refactor": "dist/main.esm.js"
   },
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "AST-based i18n refactoring tool for Vue & TypeScript",
+  "keywords": ["i18n", "vue", "ast", "refactor"],
   "dependencies": {
     "@babel/parser": "^7.28.5",
     "@babel/traverse": "^7.28.5",
