@@ -60,19 +60,18 @@ i18n.config.js
 基础示例
 ```javascript
 module.exports = {
-  sourceRoots: [
-    'src/pages',
-    'src/components',
-    'src/*'
-  ],
+  sourceDir: 'src',
 
-  localeDir: 'src/locales',
+  output: {
+    json: './locales/zh.json',
+    excel: './output/i18n.xlsx',
+  }
 
   defaultLocale: 'zh-CN',
 
-  key: {
-    strategy: 'module',
-    separator: '.'
+  keyStrategy: {
+    default: 'prefix_increment',
+    prefixRoots: ['src/*'],
   }
 }
 ```
@@ -92,11 +91,7 @@ UI 显示结果 → 自动国际化
 
 ## 📄 中文扫描能力
 
-工具会扫描并输出仍未被国际化的中文字符串，例如：
-
-src/pages/home/index.vue:23
-status === '枚举值' ? '启用' : '禁用'
-
+工具会扫描并输出仍未被国际化的中文字符串，
 
 用于人工补充或后续批量处理。
 
