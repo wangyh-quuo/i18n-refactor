@@ -13,7 +13,7 @@
   "bin": {
     "i18n-refactor": "dist/main.esm.js"
   },
-  "author": "",
+  "author": "1037790353@qq.com",
   "license": "ISC",
   "description": "AST-based i18n refactoring tool for Vue & TypeScript",
   "keywords": [
