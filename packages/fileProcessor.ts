@@ -106,12 +106,49 @@ function handleCompoundExpression(node: CompoundExpressionNode, prefix: string) 
     if (/\$t\(.*\)$/.test(node.loc.source)) {
       return null  
     }
+    if (node.ast && node.ast.type === 'ConditionalExpression') {
+      return handleConditionalExpression(node, node.ast, prefix);
+    }
     // 混合表达式暂不支持自动替换
     if (/[\u4e00-\u9fa5]/.test(node.loc.source)) {
       console.warn('⚠️ 混合表达式暂不支持自动替换，请手动处理:', node.loc.source);
     }
   }
   return null;
+}
+
+function handleConditionalExpression(node: CompoundExpressionNode, ast: CompoundExpressionNode['ast'], prefix: string): Array<{ start: number; end: number; original: string; source: string; replacement: string; }> {
+  if (!ast || ast.type !== 'ConditionalExpression') {
+    return []
+  }
+  const { consequent, alternate } = ast;
+  const res = []
+  if (consequent.type === 'StringLiteral' && /[\u4e00-\u9fa5]/.test(consequent.value)) {
+    const key = getKeyByText(consequent.value, prefix);
+    res.push({
+      start: consequent!.start! + node.loc.start.offset - 1,
+      end: consequent!.end! + node.loc.start.offset,
+      original: consequent.value,
+      source: consequent.value,
+      replacement: `$t('${key}') `,
+    });
+  } else {
+    res.push(...handleConditionalExpression(node, consequent, prefix));
+  }
+
+  if (alternate.type === 'StringLiteral' && /[\u4e00-\u9fa5]/.test(alternate.value)) {
+    const key = getKeyByText(alternate.value, prefix);
+    res.push({
+      start: alternate!.start! + node.loc.start.offset - 1,
+      end: alternate!.end! + node.loc.start.offset,
+      original: alternate.value,
+      source: alternate.value,
+      replacement: `$t('${key}') `,
+    });
+  } else {
+    res.push(...handleConditionalExpression(node, alternate, prefix));
+  }
+  return res
 }
 
 /**
@@ -194,7 +231,7 @@ export function replaceChineseInTemplate(templateContent: string, filePath: stri
     else if (node.type === NodeTypes.COMPOUND_EXPRESSION) {
       const compoundReplace = handleCompoundExpression(node, prefix);
       if (compoundReplace) {
-        replacements.push(compoundReplace);
+        Array.isArray(compoundReplace) ? replacements.push(...compoundReplace) : replacements.push(compoundReplace);
       }
       return
     }
