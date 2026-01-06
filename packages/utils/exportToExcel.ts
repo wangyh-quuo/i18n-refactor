@@ -1,13 +1,13 @@
-const xlsx = require("xlsx");
-const path = require("path");
-const fs = require("fs");
+import xlsx from "xlsx";
+import path from "path";
+import fs from "fs";
 
 /**
  * 将 zhMap 导出为 Excel 文件，如果文件不存在则自动创建
  * @param {object} zhMap 形式为 { key: zh }
  * @param {string} outputPath Excel 文件路径
  */
-function exportToExcel(zhMap, outputPath = "./output/i18n.xlsx") {
+export function exportToExcel(zhMap: Record<string, string>, outputPath = "./output/i18n.xlsx") {
   const fullPath = path.resolve(outputPath);
   const outputDir = path.dirname(fullPath);
 
@@ -37,7 +37,7 @@ function exportToExcel(zhMap, outputPath = "./output/i18n.xlsx") {
  * @param {object} mergedJson 合并后的 JSON，如 { home: { key_1: '首页' } }
  * @param {string} outputPath Excel 输出路径
  */
-function exportToExcelByModule(mergedJson, outputPath = "./output/i18n.xlsx") {
+export function exportToExcelByModule(mergedJson: Record<string, any>, outputPath = "./output/i18n.xlsx") {
   const fullPath = path.resolve(outputPath);
   const outputDir = path.dirname(fullPath);
 
@@ -67,5 +67,3 @@ function exportToExcelByModule(mergedJson, outputPath = "./output/i18n.xlsx") {
   xlsx.writeFile(workbook, fullPath);
   console.log(`✅ Excel（多 Sheet）导出成功: ${fullPath}`);
 }
-
-module.exports = { exportToExcel, exportToExcelByModule };

@@ -1,4 +1,4 @@
-const fs = require("fs");
+import fs from "fs";
 
 
 const chineseRegexp = /[\u4e00-\u9fa5]/g;
@@ -10,7 +10,7 @@ const chineseRegexp = /[\u4e00-\u9fa5]/g;
  * :title="$t('xx')"
  * label: t('xx')
  */
-function isWrappedByT(line) {
+function isWrappedByT(line: string) {
   // t( 或 $t(
   const tRegexp = /\$t\s*\(|\bt\s*\(/;
   return tRegexp.test(line);
@@ -18,9 +18,9 @@ function isWrappedByT(line) {
 
 
 
-function scanFileForUntranslated(filePath) {
+function scanFileForUntranslated(filePath: fs.PathOrFileDescriptor) {
   const lines = fs.readFileSync(filePath, "utf-8").split("\n");
-  const untranslated = [];
+  const untranslated: { file: fs.PathOrFileDescriptor; line: number; text: string; }[] = [];
 
   lines.forEach((line, index) => {
     if (chineseRegexp.test(line) && !isWrappedByT(line)) {
@@ -34,8 +34,8 @@ function scanFileForUntranslated(filePath) {
   return untranslated;
 }
 
-function scanDirectoryForChinese(dir) {
-  let results = []
+export function scanDirectoryForChinese(dir: fs.PathLike) {
+  let results: { file: fs.PathOrFileDescriptor; line: number; text: string; }[] = []
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   entries.forEach((entry) => {
     const fullPath = `${dir}/${entry.name}`;
@@ -54,6 +54,20 @@ function scanDirectoryForChinese(dir) {
   return results;
 }
 
-module.exports = {
-  scanDirectoryForChinese,
-};
+export function scanProject(rootDir: string) {
+  const results = scanDirectoryForChinese(rootDir);
+
+  if (results.length === 0) {
+    console.log("🎉 未发现未国际化的中文！");
+    return;
+  }
+
+  console.log(`\n🚨 发现 ${results.length} 处未国际化中文：\n`);
+
+  results.forEach(r => {
+    console.log(`📄 ${r.file}`);
+    console.log(`   👉 行 ${r.line}: ${r.text}`);
+  });
+
+  console.log("\n⚠️ 请手动处理或加入自动国际化流程。\n");
+}

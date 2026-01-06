@@ -1,13 +1,14 @@
-const fg = require("fast-glob");
-const fs = require("fs");
-const { processVueFile, processScriptFile } = require('./fileProcessor');
-const { flatToNested, mergeZhJson } = require('./utils');
-const { zhMap } = require('./keyGenerator');
-const { exportToExcelByModule } = require("./utils/exportToExcel");
+import fg from "fast-glob";
+import fs from "fs";
+import { processVueFile, processScriptFile } from './fileProcessor';
+import { flatToNested, mergeZhJson } from './utils';
+import { zhMap } from './keyGenerator';
+import { exportToExcelByModule } from "./utils/exportToExcel";
 
-const config = require('./config');
+import config from './config';
 
-async function main() {
+export async function main() {
+  const start = performance.now();
   const vueFiles = await fg([config.sourceDir + "/**/*.vue"]);
   const scriptFiles = await fg([config.sourceDir +  "/**/*.{js,ts}"]);
 
@@ -30,10 +31,10 @@ async function main() {
     "utf-8"
   );
 
+  const end = performance.now();
   console.log(`\n🎉 全部处理完成！已生成并合并: ${config.output.json}`);
+  console.log(`\n⏱️ 耗时: ${(end - start).toFixed(2)} ms`);
   if (config.exportExcel) {
     exportToExcelByModule(mergedZhJson, config.output.excel);
   }
 }
-
-main();
