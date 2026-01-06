@@ -17,7 +17,7 @@ import {
 } from "@vue/compiler-dom";
 import { getKeyByText } from './keyGenerator';
 import config from "./config";
-import { matchRootDir } from "./utils";
+import { isChinese, matchRootDir } from "./utils";
 
 type AllNode = ParentNode | ExpressionNode | TemplateChildNode | AttributeNode | DirectiveNode;
 
@@ -110,7 +110,7 @@ function handleCompoundExpression(node: CompoundExpressionNode, prefix: string) 
       return handleConditionalExpression(node, node.ast, prefix);
     }
     // 混合表达式暂不支持自动替换
-    if (/[\u4e00-\u9fa5]/.test(node.loc.source)) {
+    if (isChinese(node.loc.source)) {
       console.warn('⚠️ 混合表达式暂不支持自动替换，请手动处理:', node.loc.source);
     }
   }
@@ -123,7 +123,7 @@ function handleConditionalExpression(node: CompoundExpressionNode, ast: Compound
   }
   const { consequent, alternate } = ast;
   const res = []
-  if (consequent.type === 'StringLiteral' && /[\u4e00-\u9fa5]/.test(consequent.value)) {
+  if (consequent.type === 'StringLiteral' && isChinese(consequent.value)) {
     const key = getKeyByText(consequent.value, prefix);
     res.push({
       start: consequent!.start! + node.loc.start.offset - 1,
@@ -136,7 +136,7 @@ function handleConditionalExpression(node: CompoundExpressionNode, ast: Compound
     res.push(...handleConditionalExpression(node, consequent, prefix));
   }
 
-  if (alternate.type === 'StringLiteral' && /[\u4e00-\u9fa5]/.test(alternate.value)) {
+  if (alternate.type === 'StringLiteral' && isChinese(alternate.value)) {
     const key = getKeyByText(alternate.value, prefix);
     res.push({
       start: alternate!.start! + node.loc.start.offset - 1,
@@ -168,7 +168,7 @@ export function replaceChineseInTemplate(templateContent: string, filePath: stri
     }
     if (node.type === NodeTypes.TEXT) {
       const text = node.content.trim();
-      if (text && /[\u4e00-\u9fa5]/.test(text)) {
+      if (text && isChinese(text)) {
         const key = getKeyByText(text, prefix);
         replacements.push({
           ...getSourceReplacePosition(node.loc),
@@ -196,7 +196,7 @@ export function replaceChineseInTemplate(templateContent: string, filePath: stri
     else if (node.type === NodeTypes.ATTRIBUTE) {
       const nameLoc = node.nameLoc;
       // 非动态绑定属性才需要添加 : 前缀
-      if(!nameLoc.source.startsWith(':') && node.value?.content && /[\u4e00-\u9fa5]/.test(node.value.content)) {
+      if(!nameLoc.source.startsWith(':') && node.value?.content && isChinese(node.value.content)) {
         replacements.push({
           ...getSourceReplacePosition(nameLoc),
           original: nameLoc.source,
@@ -218,7 +218,7 @@ export function replaceChineseInTemplate(templateContent: string, filePath: stri
     // 表达式
     else if (node.type === NodeTypes.SIMPLE_EXPRESSION) {
       const text = node.content.trim();
-      if (node.ast && node.ast.type === 'StringLiteral' && text && /[\u4e00-\u9fa5]/.test(text)) {
+      if (node.ast && node.ast.type === 'StringLiteral' && text && isChinese(text)) {
         const key = getKeyByText(text, prefix);
         replacements.push({
           ...getSourceReplacePosition(node.loc),
@@ -297,7 +297,7 @@ export function extractChineseFromScript(content: string, filePath: string) {
     // 模板字符串 const msg = `你好${name}同学`; --> `${t('key_1', { 0: name })}`
     TemplateLiteral(path) {
       const { quasis, expressions } = path.node;
-      const needReplace = quasis.some(q => /[\u4e00-\u9fa5]/.test(q.value.cooked || q.value.raw)) && 
+      const needReplace = quasis.some(q => isChinese(q.value.cooked || q.value.raw)) && 
        expressions.length && expressions.every(exp => ['Identifier', 'MemberExpression'].includes(exp.type));
       if (needReplace) {
         const pos = { start: 0, end: 0 };

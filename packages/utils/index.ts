@@ -103,3 +103,7 @@ export function matchRootDir(filePath: string, patterns: string[]) {
   }
   return { matched: false, root: '' }
 }
+
+export function isChinese(str: string) {
+  return /[\u4e00-\u9fa5]/.test(str);
+}
