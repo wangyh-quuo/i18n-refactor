@@ -293,6 +293,7 @@ export function extractChineseFromScript(content: string, filePath: string) {
         return;
       }
       const key = getKeyByText(node.value, getPagePrefix(filePath));
+      loggerDryRun(filePath, node.value, `t('${key}')`);
       result.overwrite(node.start!, node.end!, `t('${key}')`);
     },
     // 模板字符串 const msg = `你好${name}同学`; --> `${t('key_1', { 0: name })}`
