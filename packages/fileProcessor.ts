@@ -93,6 +93,9 @@ function handleCompoundExpression(node: CompoundExpressionNode, prefix: string) 
         pos.end = childPos.end;
       }
     });
+    if (!isChinese(combinedText)) {
+      return null
+    }
     const key = getKeyByText(combinedText, prefix);
     return {
       start: pos.start,
