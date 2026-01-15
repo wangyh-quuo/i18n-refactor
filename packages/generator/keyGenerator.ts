@@ -1,21 +1,15 @@
 import md5 from 'md5';
 import path from 'path';
-import config from '../config';
-import { getExistingJson, matchRootDir } from '../utils';
 
-export const zhMap: Record<string, string> = {};
-const existingJson = getExistingJson();
-// 获取该模块的最后一个 id
-const lastIds = getLastKeyId(existingJson);
-// 用于维护全局已生成的 key
-const existingKeys = initExistingKeys(existingJson);
+import { matchRootDir } from '../utils';
+import { context } from '../core/context';
 
 /**
  * 获取该模块的最后一个 id
  * @param {Object} existingJson 已存在的 JSON 对象
  * @returns {Object} 每个模块的最后一个 id
  */
-function getLastKeyId(existingJson: Record<string, any>) {
+export function getLastKeyId(existingJson: Record<string, any>) {
   const lastIds: Record<string, number> = {};
 
   function traverse(obj: Record<string, any>, prefix: string | null = null) {
@@ -39,7 +33,7 @@ function getLastKeyId(existingJson: Record<string, any>) {
  * @param {Object} existingJson 已存在的 JSON 对象
  * @returns {Object} 中文文本和 key 的映射关系
  */
-function initExistingKeys(existingJson: Record<string, any>) {
+export function initExistingKeys(existingJson: Record<string, any>) {
   const map: Record<string, string> = {};
   for (const module in existingJson) {
     const group = existingJson[module];
@@ -61,23 +55,23 @@ export function getKeyByText(text: string, prefix: string) {
   const clean = text.trim();
 
   // 如果已经存在，则直接返回对应的 key
-  if (existingKeys[clean]) return existingKeys[clean];
+  if (context.existingKeys[clean]) return context.existingKeys[clean];
 
   let key = '';
 
-  if (config.keyStrategy.default === 'prefix_increment') {
-    let id = lastIds[prefix] || 0; // 获取当前模块的最后一个 id，没有则从 0 开始
+  if (context.config.keyStrategy.default === 'prefix_increment') {
+    let id = context.lastIds[prefix] || 0; // 获取当前模块的最后一个 id，没有则从 0 开始
     // 生成新的 key
     key = `${prefix}.key_${++id}`;
     // 更新模块的 ID
-    lastIds[prefix] = id;
-  } else if (config.keyStrategy.default === 'hash')  {
+    context.lastIds[prefix] = id;
+  } else if (context.config.keyStrategy.default === 'hash')  {
     const hash = md5(text).slice(0, 8); // 可控制长度
     key = `${prefix}.${hash}`;
   }
 
-  existingKeys[clean] = key; // 记录该中文和 key 的映射关系
-  zhMap[key] = clean; // 添加到最终的 zhMap
+  context.existingKeys[clean] = key; // 记录该中文和 key 的映射关系
+  context.zhMap[key] = clean; // 添加到最终的 zhMap
  
   return key;
 }
@@ -88,7 +82,7 @@ export function getKeyByText(text: string, prefix: string) {
  * @returns {string} 模块前缀
  */
 export function getPagePrefix(filePath: string): string {
-  const matchResult = matchRootDir(filePath, config.keyStrategy.prefixRoots);
+  const matchResult = matchRootDir(filePath, context.config.keyStrategy.prefixRoots);
   if (matchResult.matched) {
     const normalized = path.normalize(filePath); // 保证是平台风格路径
     const segments = normalized.replace(matchResult.root, '').split(path.sep).filter(Boolean);

@@ -16,6 +16,8 @@ import {
 import type { IParser } from "./interface";
 import { isChinese } from "../utils";
 import { getKeyByText, getPagePrefix } from "../generator/keyGenerator";
+import { Replacer } from "../replacer";
+import { ScriptParser } from "./scriptParser";
 
 type AllNode = ParentNode | ExpressionNode | TemplateChildNode | AttributeNode | DirectiveNode;
 
@@ -54,25 +56,30 @@ function getSourceReplacePosition(sourceLocation: SourceLocation) {
 
 export class VueParser implements IParser {
   filePath: string;
-
+  rawContent: string;
   private templateContent: string;
   private scriptContent: string;
 
   constructor(filePath: string) {
     this.filePath = filePath;
+    this.rawContent = '';
     this.templateContent = "";
     this.scriptContent = "";
     this.parse();
   }
 
   private parse() {
-    const raw = fs.readFileSync(this.filePath, "utf-8");
-    const { descriptor } = parse(raw);
+    this.rawContent = fs.readFileSync(this.filePath, "utf-8");
+    const { descriptor } = parse(this.rawContent);
     if (descriptor.template) {
       this.templateContent = descriptor.template.content;
     }
-    if (descriptor.script) {
-      this.scriptContent = descriptor.script.content;
+    if (descriptor.script || descriptor.scriptSetup) {
+      const scriptBlock = descriptor.scriptSetup || descriptor.script;
+      const scriptContent = scriptBlock?.content;
+      if (scriptContent) {
+        this.scriptContent = scriptContent;
+      }
     }
   }
 
@@ -276,6 +283,9 @@ export class VueParser implements IParser {
   }
 
   process() {
-    const replacements = this.processTemplate(this.templateContent, this.filePath);
+    const templateReplacements = this.processTemplate(this.templateContent, this.filePath);
+    const scriptReplacements =  ScriptParser.parseScript(this.scriptContent, this.filePath);
+    new Replacer(templateReplacements).replace(this.templateContent, this.filePath);
+    new Replacer(scriptReplacements).replace(this.scriptContent, this.filePath);
   }
 }

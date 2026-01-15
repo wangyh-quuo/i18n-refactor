@@ -5,11 +5,10 @@
   "type": "module",
   "scripts": {
     "i18n": "esno packages/bin/i18n-cli.ts",
-    "scan": "esno packages/bin/scan.ts",
+    "scan": "esno packages/bin/i18n-cli.ts --scan",
     "build": "rollup -c",
     "prepublishOnly": "npm run build",
-    "test": "mocha",
-    "dev": "esno packages/core/run.ts"
+    "test": "mocha"
   },
   "bin": {
     "i18n-refactor": "dist/main.esm.js"

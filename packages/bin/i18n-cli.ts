@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 
-import { main } from '../extract-i18n';
 import * as commander from 'commander';
 import packageJson from '../../package.json'
-import { scanProject } from '../utils/scan';
-import config, { setConfig } from '../config';
+import { run } from '../core/run';
 
 const program = new commander.Command()
 
@@ -15,11 +13,8 @@ program
   .option('-c, --config <path>', '指定配置文件 (默认: i18n.config.js)', 'i18n.config.js')
   .option('--dry-run', '只分析，不写文件')
   .action((options) => {
-    setConfig({ dryRun: options.dryRun });
-    if (options.scan) {
-      scanProject(config.sourceDir);
-    } else {
-      main();
-    }
+    const start = performance.now();
+    run(options);
+    console.log(`\n⏱️ 耗时: ${(performance.now() - start).toFixed(2)} ms`);
   })
   .parse()
