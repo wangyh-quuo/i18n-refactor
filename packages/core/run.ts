@@ -22,5 +22,10 @@ export async function run(options?: Record<string, any>) {
     }
   }
 
+  console.log(`----------------------------------------`);
+  context.notReplaceFiles.forEach(item => {
+    console.log(`⚠️ 未替换内容: ${item.source.trim()}，原因: ${item.reason}, 位置: ${item.filePath}`);
+  })
+
   writeJsonToFile();
 }

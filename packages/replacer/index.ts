@@ -34,10 +34,5 @@ export class Replacer {
       fs.writeFileSync(filePath, replacedContent, "utf-8");
       console.log(`✅ 处理完成: ${filePath}`);
     }
-
-    console.log(`----------------------------------------`);
-    context.notReplaceFiles.forEach(item => {
-      console.log(`⚠️ 未替换内容: ${item.source.trim()}，原因: ${item.reason}, 位置: ${item.filePath}`);
-    })
   }
 }
