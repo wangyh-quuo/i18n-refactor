@@ -14,7 +14,8 @@ program
   .option('--dry-run', '只分析，不写文件')
   .action((options) => {
     const start = performance.now();
-    run(options);
-    console.log(`\n⏱️ 耗时: ${(performance.now() - start).toFixed(2)} ms`);
+    run(options).finally(() => {
+      console.log(`\n⏱️ 耗时: ${(performance.now() - start).toFixed(2)} ms`);
+    })
   })
   .parse()

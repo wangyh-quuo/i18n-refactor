@@ -6,11 +6,10 @@ import { context } from "./context";
 
 export async function run(options?: Record<string, any>) {
   initOptions(options || {});
-  initContext();
-
-  const scanner = new Scanner("src");
+  await initContext();
+  const scanner = new Scanner(context.config.sourceDir);
   if (context.config.scan) {
-    return scanner.scanProject(context.config.sourceDir);
+    return scanner.scanProject();
   }
 
   const files = await scanner.scan();

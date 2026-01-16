@@ -285,7 +285,9 @@ export class VueParser implements IParser {
   process() {
     const templateReplacements = this.processTemplate(this.templateContent, this.filePath);
     const scriptReplacements =  ScriptParser.parseScript(this.scriptContent, this.filePath);
-    new Replacer(templateReplacements).replace(this.templateContent, this.filePath);
-    new Replacer(scriptReplacements).replace(this.scriptContent, this.filePath);
+    const templateReplacedContent = new Replacer(templateReplacements).replace(this.templateContent, this.filePath);
+    const scriptReplacedContent = new Replacer(scriptReplacements).replace(this.scriptContent, this.filePath);
+    const replacedContent = this.rawContent.replace(this.templateContent, templateReplacedContent).replace(this.scriptContent, scriptReplacedContent);
+    Replacer.updateFile(this.filePath, replacedContent);
   }
 }

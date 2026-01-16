@@ -26,10 +26,13 @@ export class Replacer {
       loggerDryRun(filePath, r.source, r.replacement);
     }
     const replacedContent = content.toString();
+    return replacedContent;
+  }
+
+  static updateFile(filePath: string, replacedContent: string) {
     if (!context.config.dryRun) {
       fs.writeFileSync(filePath, replacedContent, "utf-8");
       console.log(`✅ 替换完成: ${filePath}`);
     }
-    return replacedContent;
   }
 }

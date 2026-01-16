@@ -118,6 +118,7 @@ export class ScriptParser implements IParser {
 
   process(): void {
     const replacements = ScriptParser.parseScript(this.rawContent, this.filePath);
-    new Replacer(replacements).replace(this.rawContent, this.filePath);   
+    const replacedContent = new Replacer(replacements).replace(this.rawContent, this.filePath);   
+    Replacer.updateFile(this.filePath, replacedContent);
   }
 }

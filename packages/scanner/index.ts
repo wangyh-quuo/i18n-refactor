@@ -72,8 +72,8 @@ class Scanner {
     return results;
   }
 
-  scanProject(rootDir: string) {
-    const results = this.scanDirectoryForChinese(rootDir);
+  scanProject(rootDir?: string) {
+    const results = this.scanDirectoryForChinese(rootDir || this.sourceDir);
 
     if (results.length === 0) {
       console.log("🎉 未发现未国际化的中文！");
