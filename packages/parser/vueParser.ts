@@ -18,6 +18,7 @@ import { isChinese } from "../utils";
 import { getKeyByText, getPagePrefix } from "../generator/keyGenerator";
 import { Replacer } from "../replacer";
 import { ScriptParser } from "./scriptParser";
+import { context } from "../core/context";
 
 type AllNode = ParentNode | ExpressionNode | TemplateChildNode | AttributeNode | DirectiveNode;
 
@@ -245,7 +246,11 @@ export class VueParser implements IParser {
       }
       // 混合表达式暂不支持自动替换
       if (isChinese(node.loc.source)) {
-        console.warn('⚠️ 混合表达式暂不支持自动替换，请手动处理:', node.loc.source);
+        context.notReplaceFiles.push({
+          source: node.loc.source,
+          filePath: this.filePath,
+          reason: '混合表达式暂不支持自动替换',
+        })
       }
     }
     return null;

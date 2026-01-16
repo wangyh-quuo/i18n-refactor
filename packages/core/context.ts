@@ -7,6 +7,7 @@ export interface IContext {
   existingJson: Record<string, string>;
   lastIds: Record<string, number>;
   existingKeys: Record<string, string>;
+  notReplaceFiles: { source: string, filePath: string, reason: string }[];
 }
 
 function createContext(config: IConfig): IContext {
@@ -16,6 +17,7 @@ function createContext(config: IConfig): IContext {
     existingJson: {},
     lastIds: {},
     existingKeys: {},
+    notReplaceFiles: [],
   }
 }
 

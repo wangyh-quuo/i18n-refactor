@@ -32,7 +32,12 @@ export class Replacer {
   static updateFile(filePath: string, replacedContent: string) {
     if (!context.config.dryRun) {
       fs.writeFileSync(filePath, replacedContent, "utf-8");
-      console.log(`✅ 替换完成: ${filePath}`);
+      console.log(`✅ 处理完成: ${filePath}`);
     }
+
+    console.log(`----------------------------------------`);
+    context.notReplaceFiles.forEach(item => {
+      console.log(`⚠️ 未替换内容: ${item.source.trim()}，原因: ${item.reason}, 位置: ${item.filePath}`);
+    })
   }
 }

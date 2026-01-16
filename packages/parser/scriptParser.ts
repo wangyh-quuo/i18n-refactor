@@ -4,8 +4,9 @@ import { parse as parseBabel } from "@babel/parser";
 import type { IParser } from "./interface";
 import traverse from '../utils/babelTraverse';
 import { getKeyByText, getPagePrefix } from "../generator/keyGenerator";
-import { isChinese } from "../utils";
+import { containsHTML, isChinese } from "../utils";
 import { Replacer } from "../replacer";
+import { context } from "../core/context";
 
 export class ScriptParser implements IParser {
   filePath: string;
@@ -60,6 +61,16 @@ export class ScriptParser implements IParser {
       // 模板字符串 const msg = `你好${name}同学`; --> `${t('key_1', { 0: name })}`
       TemplateLiteral(path) {
         const { quasis, expressions } = path.node;
+        if (quasis.some((q) => containsHTML(q.value.cooked || q.value.raw))) {
+          
+          context.notReplaceFiles.push({
+            source: quasis.map(q => q.value.cooked || q.value.raw).join("${...}"),
+            filePath: filePath,
+            reason: '模板字符串中包含HTML，暂不支持自动替换',
+          })
+          return;
+        }
+
         const needReplace =
           quasis.some((q) => isChinese(q.value.cooked || q.value.raw)) &&
           expressions.length &&
