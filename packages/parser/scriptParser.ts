@@ -94,6 +94,9 @@ export class ScriptParser implements IParser {
             } else if (child.type === "Identifier") {
               combinedText += `{${i}}`;
               tempList.push(child.name);
+            } else if (child.type === "MemberExpression") {
+              combinedText += `{${i}}`;
+              tempList.push(content.slice(child.start!, child.end!));
             }
             pos.end = child.end!;
           });
