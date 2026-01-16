@@ -48,7 +48,6 @@ export async function initContext() {
 
 
   const targetPath = context.configPath || path.resolve('./')
-  console.log(context.configPath,'====');
   const userConfig = await loadProjectConfig(findProjectConfig(targetPath));
   context.config = merge(context.config, userConfig);
 
