@@ -62,12 +62,13 @@ export class ScriptParser implements IParser {
       TemplateLiteral(path) {
         const { quasis, expressions } = path.node;
         if (quasis.some((q) => containsHTML(q.value.cooked || q.value.raw))) {
-          
-          context.notReplaceFiles.push({
-            source: quasis.map(q => q.value.cooked || q.value.raw).join("${...}"),
-            filePath: filePath,
-            reason: '模板字符串中包含HTML，暂不支持自动替换',
-          })
+          if (quasis.some((q) => isChinese(q.value.cooked || q.value.raw))) {
+            context.notReplaceFiles.push({
+              source: quasis.map(q => q.value.cooked || q.value.raw).join("${...}"),
+              filePath: filePath,
+              reason: '模板字符串中包含HTML，暂不支持自动替换',
+            })
+          }
           return;
         }
 
