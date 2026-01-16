@@ -69,6 +69,9 @@ export class VueParser implements IParser {
   }
 
   private parse() {
+    if (!fs.existsSync(this.filePath)) {
+      return;
+    }
     this.rawContent = fs.readFileSync(this.filePath, "utf-8");
     const { descriptor } = parse(this.rawContent);
     if (descriptor.template) {
@@ -282,12 +285,20 @@ export class VueParser implements IParser {
     return res
   }
 
-  process() {
+  setScriptContent(scriptContent: string) {
+    this.scriptContent = scriptContent;
+  }
+
+  setTemplateContent(templateContent: string) {
+    this.templateContent = templateContent;
+  }
+
+  process() : string {
     const templateReplacements = this.processTemplate(this.templateContent, this.filePath);
     const scriptReplacements =  ScriptParser.parseScript(this.scriptContent, this.filePath);
     const templateReplacedContent = new Replacer(templateReplacements).replace(this.templateContent, this.filePath);
     const scriptReplacedContent = new Replacer(scriptReplacements).replace(this.scriptContent, this.filePath);
     const replacedContent = this.rawContent.replace(this.templateContent, templateReplacedContent).replace(this.scriptContent, scriptReplacedContent);
-    Replacer.updateFile(this.filePath, replacedContent);
+    return replacedContent;
   }
 }

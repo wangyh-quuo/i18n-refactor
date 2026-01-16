@@ -1,7 +1,9 @@
 import { it, describe } from 'mocha';
-import { extractChineseFromScript, replaceChineseInTemplate } from '../packages/fileProcessor';
 import assert from 'assert';
-import { getKeyByText } from '../packages/keyGenerator';
+
+import { getKeyByText } from '../packages/generator/keyGenerator';
+import { VueParser } from '../packages/parser/vueParser';
+import { ScriptParser } from '../packages/parser/scriptParser';
 
 // let index = 0;
 
@@ -19,11 +21,14 @@ import { getKeyByText } from '../packages/keyGenerator';
 // })
 
 // 模板替换
-describe('replaceChineseInTemplate', () => {
+describe('VueParser template', () => {
   it('attribute', () => {
     const template = `<div title="标题"></div>`
     const filePath = 'pages/index.vue';
-    const result = replaceChineseInTemplate(template, filePath);
+    const vueParser = new VueParser(filePath);
+    vueParser.rawContent = template;
+    vueParser.setTemplateContent(template);
+    const result = vueParser.process();
     assert.equal(result, `<div :title="$t('${getKeyByText('标题', 'common')}')"></div>`);
   });
 
@@ -34,7 +39,10 @@ describe('replaceChineseInTemplate', () => {
       </div>
     `
     const filePath = 'pages/index.vue';
-    const result = replaceChineseInTemplate(template, filePath);
+    const vueParser = new VueParser(filePath);
+    vueParser.rawContent = template;
+    vueParser.setTemplateContent(template);
+    const result = vueParser.process();
     const expectResult = `
       <div>
         {{ $t('${getKeyByText('这是一段文本...', 'common')}') }}
@@ -53,7 +61,10 @@ describe('replaceChineseInTemplate', () => {
       </div>
     `
     const filePath = 'pages/index.vue';
-    const result = replaceChineseInTemplate(template, filePath);
+    const vueParser = new VueParser(filePath);
+    vueParser.rawContent = template;
+    vueParser.setTemplateContent(template);
+    const result = vueParser.process();
     const expectResult = `
       <div v-if="condition">
         {{ $t('${getKeyByText('v-if里的文本', 'common')}') }}
@@ -76,7 +87,10 @@ describe('replaceChineseInTemplate', () => {
       </Parent>
     `
     const filePath = 'pages/index.vue';
-    const result = replaceChineseInTemplate(template, filePath);
+    const vueParser = new VueParser(filePath);
+    vueParser.rawContent = template;
+    vueParser.setTemplateContent(template);
+    const result = vueParser.process();
     const expectResult = `
       <Parent>
         <template #header>
@@ -96,7 +110,10 @@ describe('replaceChineseInTemplate', () => {
       </div>
     `
     const filePath = 'pages/index.vue';
-    const result = replaceChineseInTemplate(template, filePath);
+    const vueParser = new VueParser(filePath);
+    vueParser.rawContent = template;
+    vueParser.setTemplateContent(template);
+    const result = vueParser.process();
     const expectResult = `
       <div>
         {{ $t('${getKeyByText('今天天气{0}, 温度{1}', 'common')}', { 0: weather, 1: temperature }) }}
@@ -112,7 +129,10 @@ describe('replaceChineseInTemplate', () => {
       </div>
     `
     const filePath = 'pages/index.vue';
-    const result = replaceChineseInTemplate(template, filePath);
+    const vueParser = new VueParser(filePath);
+    vueParser.rawContent = template;
+    vueParser.setTemplateContent(template);
+    const result = vueParser.process();
     assert.equal(result, template);
   })
 
@@ -123,7 +143,10 @@ describe('replaceChineseInTemplate', () => {
       </div>
     `
     const filePath = 'pages/index.vue';
-    const result = replaceChineseInTemplate(template, filePath);
+    const vueParser = new VueParser(filePath);
+    vueParser.rawContent = template;
+    vueParser.setTemplateContent(template);
+    const result = vueParser.process();
     const expectResult = `
       <div>
         {{ status === 1 ? $t('${getKeyByText('已完成', 'common')}') : $t('${getKeyByText('未完成', 'common')}') }}
@@ -141,7 +164,9 @@ describe('extractChineseFromScript', () => {
       message.error('提交失败');
     `;
     const filePath = 'pages/index.vue';
-    const result = extractChineseFromScript(content, filePath);
+    const scriptParser = new ScriptParser(filePath);
+    scriptParser.rawContent = content;
+    const result = scriptParser.process();
     const expectResult = `
       message.error(t('${getKeyByText('提交失败', 'common')}'));
     `;
@@ -155,7 +180,9 @@ describe('extractChineseFromScript', () => {
       }
     `
     const filePath = 'pages/index.vue';
-    const result = extractChineseFromScript(content, filePath);
+    const scriptParser = new ScriptParser(filePath);
+    scriptParser.rawContent = content;
+    const result = scriptParser.process();
     const expectResult = `
       function getStatus(status) {
         return status === 1 ? t('${getKeyByText('成功', 'common')}') : t('${getKeyByText('失败', 'common')}');

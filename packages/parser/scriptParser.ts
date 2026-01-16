@@ -14,7 +14,9 @@ export class ScriptParser implements IParser {
   constructor(filePath: string) {
     this.filePath = filePath;
     this.rawContent = "";
-    this.rawContent = fs.readFileSync(filePath, "utf-8");
+    if (fs.existsSync(filePath)) {
+      this.rawContent = fs.readFileSync(filePath, "utf-8");
+    }
   }
   
   static parseScript(content: string, filePath: string) {
@@ -116,9 +118,8 @@ export class ScriptParser implements IParser {
     return replacements;
   }
 
-  process(): void {
+  process(): string {
     const replacements = ScriptParser.parseScript(this.rawContent, this.filePath);
-    const replacedContent = new Replacer(replacements).replace(this.rawContent, this.filePath);   
-    Replacer.updateFile(this.filePath, replacedContent);
+    return new Replacer(replacements).replace(this.rawContent, this.filePath);
   }
 }

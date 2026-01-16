@@ -3,6 +3,7 @@ import { parserFactory } from "../parser/parserFactory";
 import Scanner from "../scanner";
 import { initContext, initOptions } from "./init";
 import { context } from "./context";
+import { Replacer } from "../replacer";
 
 export async function run(options?: Record<string, any>) {
   initOptions(options || {});
@@ -16,7 +17,8 @@ export async function run(options?: Record<string, any>) {
   for (const filePath of files) {
     const parser = parserFactory.getParser(filePath);
     if (parser) {
-      parser.process();
+      const replacedContent = parser.process();
+      Replacer.updateFile(filePath, replacedContent);
     }
   }
 
