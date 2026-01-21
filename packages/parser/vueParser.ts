@@ -287,10 +287,10 @@ export class VueParser implements IParser {
       const key = getKeyByText(alternate.value, prefix);
       res.push({
         start: alternate!.start! + node.loc.start.offset - 1,
-        end: alternate!.end! + node.loc.start.offset,
+        end: alternate!.end! + node.loc.start.offset - 1,
         original: alternate.value,
         source: alternate.value,
-        replacement: `$t('${key}') `,
+        replacement: `$t('${key}')`,
       });
     } else {
       res.push(...this.handleConditionalExpression(node, alternate, prefix));
