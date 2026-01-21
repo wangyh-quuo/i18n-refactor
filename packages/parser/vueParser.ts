@@ -11,6 +11,7 @@ import {
   type AttributeNode,
   type DirectiveNode,
   type CompoundExpressionNode,
+  type SimpleExpressionNode,
 } from "@vue/compiler-dom";
 
 import type { IParser } from "./interface";
@@ -19,6 +20,7 @@ import { getKeyByText, getPagePrefix } from "../generator/keyGenerator";
 import { Replacer } from "../replacer";
 import { ScriptParser } from "./scriptParser";
 import { context } from "../core/context";
+import { isObject } from "lodash-es";
 
 type AllNode = ParentNode | ExpressionNode | TemplateChildNode | AttributeNode | DirectiveNode;
 
@@ -99,6 +101,7 @@ export class VueParser implements IParser {
     }[] = [];
 
     const handleCompoundExpression = this.handleCompoundExpression.bind(this);
+    const handleArrayExpression = this.handleArrayExpression.bind(this);
 
     function walk(node: AllNode, replacement?: (k: string) => string) {
       if (node.type === NodeTypes.COMMENT) {
@@ -162,17 +165,22 @@ export class VueParser implements IParser {
         const text = node.content.trim();
         if (
           node.ast &&
-          node.ast.type === "StringLiteral" &&
           text &&
           isChinese(text)
         ) {
-          const key = getKeyByText(text, prefix);
-          replacements.push({
-            ...getSourceReplacePosition(node.loc),
-            original: text,
-            source: node.loc.source,
-            replacement: replacement ? replacement(key) : `$t('${key}')`,
-          });
+          if (node.ast.type === "StringLiteral") {
+            const key = getKeyByText(text, prefix);
+            replacements.push({
+              ...getSourceReplacePosition(node.loc),
+              original: text,
+              source: node.loc.source,  
+              replacement: replacement ? replacement(key) : `$t('${key}')`,
+            });
+          }
+          else if (node.ast.type === 'ArrayExpression') {
+            // 数组表达式中的中文
+            replacements.push(...handleArrayExpression(node, node.ast, prefix));
+          }
         }
       } else if (node.type === NodeTypes.COMPOUND_EXPRESSION) {
         const compoundReplace = handleCompoundExpression(node, prefix);
@@ -288,6 +296,29 @@ export class VueParser implements IParser {
       res.push(...this.handleConditionalExpression(node, alternate, prefix));
     }
     return res
+  }
+
+  private handleArrayExpression(node: SimpleExpressionNode, ast: SimpleExpressionNode['ast'], prefix: string) {
+    const res: { start: number; end: number; original: string; source: string; replacement: string; }[] = [];
+    if (ast && ast.type === 'ArrayExpression') {
+      const elements = ast.elements;
+      elements.forEach((el) => {
+        if (isObject(el) && el.type === 'StringLiteral' && isChinese(el.value)) {
+          const key = getKeyByText(el.value, prefix);
+          res.push({
+            start: el.start! + node.loc.start.offset - 1,
+            end: el!.end! + node.loc.start.offset - 1,
+            original: el.value,
+            source: el.value,
+            replacement: `$t('${key}')`,
+          });
+        }
+        else if (isObject(el) && el.type === 'ArrayExpression') {
+          res.push(...this.handleArrayExpression(node, el, prefix));
+        }
+      });
+    } 
+    return res;
   }
 
   setScriptContent(scriptContent: string) {
