@@ -242,8 +242,8 @@ export class VueParser implements IParser {
         end: pos.end,
         original: node.loc.source,
         source: node.loc.source,
-        // $t('', { 0: xxx })
-        replacement: `{{ $t('${key}', { ${tempList.map((_, index) => `${index}: ${tempList[index]}`).join(', ')} }) }}`
+        // $t('', [xxx, yyy])
+        replacement: `{{ $t('${key}', [${tempList.join(', ')}]) }}`
       }
     } else {
       if (/\$t\(.*\)$/.test(node.loc.source)) {

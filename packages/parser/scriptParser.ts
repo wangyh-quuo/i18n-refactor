@@ -37,7 +37,7 @@ export class ScriptParser implements IParser {
     traverse(ast, {
       StringLiteral(path) {
         const { node } = path;
-        if (!/[\u4e00-\u9fff]/.test(node.value)) {
+        if (!isChinese(node.value)) {
           return;
         }
         // 排除 import / key
@@ -58,7 +58,7 @@ export class ScriptParser implements IParser {
           replacement: `t('${key}')`,
         });
       },
-      // 模板字符串 const msg = `你好${name}同学`; --> `${t('key_1', { 0: name })}`
+      // 模板字符串 const msg = `你好${name}同学`; --> `${t('key_1', [name])}`
       TemplateLiteral(path) {
         const { quasis, expressions } = path.node;
         if (quasis.some((q) => containsHTML(q.value.cooked || q.value.raw))) {
@@ -95,9 +95,11 @@ export class ScriptParser implements IParser {
             } else if (child.type === "Identifier") {
               combinedText += `{${i}}`;
               tempList.push(child.name);
+              i++;
             } else if (child.type === "MemberExpression") {
               combinedText += `{${i}}`;
               tempList.push(content.slice(child.start!, child.end!));
+              i++;
             }
             pos.end = child.end!;
           });
@@ -107,12 +109,13 @@ export class ScriptParser implements IParser {
             end: pos.end,
             original: combinedText,
             source: combinedText,
-            replacement: `\${t('${key}', { ${tempList.map((_, index) => `${index}: ${tempList[index]}`).join(", ")} })}`});
+            replacement: `\${t('${key}', [${tempList.join(", ")}])}`,
+          });
           return;
         } else {
           quasis.forEach((quasi) => {
             const cooked = quasi.value.cooked || quasi.value.raw;
-            if (!/[\u4e00-\u9fff]/.test(cooked)) {
+            if (!isChinese(cooked)) {
               return;
             }
             if (quasi.start == null || quasi.end == null) {

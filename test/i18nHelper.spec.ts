@@ -116,7 +116,7 @@ describe('VueParser template', () => {
     const result = vueParser.process();
     const expectResult = `
       <div>
-        {{ $t('${getKeyByText('今天天气{0}, 温度{1}', 'common')}', { 0: weather, 1: temperature }) }}
+        {{ $t('${getKeyByText('今天天气{0}, 温度{1}', 'common')}', [weather, temperature]) }}
       </div>
     `;
     assert.equal(result, expectResult);
@@ -187,6 +187,20 @@ describe('extractChineseFromScript', () => {
       function getStatus(status) {
         return status === 1 ? t('${getKeyByText('成功', 'common')}') : t('${getKeyByText('失败', 'common')}');
       }
+    `;
+    assert.equal(result, expectResult);
+  })
+
+  it('template literal with interpolations', () => {
+    const content = `
+      const msg = \`你好\${name}，欢迎\${user.name}\`;
+    `;
+    const filePath = 'pages/index.vue';
+    const scriptParser = new ScriptParser(filePath);
+    scriptParser.rawContent = content;
+    const result = scriptParser.process();
+    const expectResult = `
+      const msg = \`\${t('${getKeyByText('你好{0}，欢迎{1}', 'common')}', [name, user.name])}\`;
     `;
     assert.equal(result, expectResult);
   })

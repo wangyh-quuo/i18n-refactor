@@ -1,7 +1,7 @@
 import fg from "fast-glob";
 import fs from "fs";
 
-const chineseRegexp = /[\u4e00-\u9fa5]/g;
+import { isChinese } from "../utils";
 
 /**
  * 判断文本是否已被翻译函数包裹
@@ -37,7 +37,7 @@ class Scanner {
     }[] = [];
 
     lines.forEach((line, index) => {
-      if (chineseRegexp.test(line) && !isWrappedByT(line)) {
+      if (isChinese(line) && !isWrappedByT(line)) {
         untranslated.push({
           file: filePath,
           line: index + 1,
@@ -62,7 +62,7 @@ class Scanner {
         if (untranslated.length > 0) {
           results.push(...untranslated);
         }
-      } else if (entry.isFile() && /\.(vue|js|ts)$/.test(entry.name)) {
+      } else if (entry.isFile() && /\.(vue|js|ts|jsx|tsx)$/.test(entry.name)) {
         const untranslated = this.scanFileForUntranslated(fullPath);
         if (untranslated.length > 0) {
           results.push(...untranslated);

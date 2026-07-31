@@ -2,3 +2,4 @@ packages/
 rollup.config.js
 .gitattributes
 test/
+.mocharc.json

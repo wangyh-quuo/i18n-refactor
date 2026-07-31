@@ -66,6 +66,14 @@ export function writeJsonToFile() {
   const nested = flatToNested(context.zhMap);
   const mergedZhJson = mergeZhJson(nested);
 
+  if (context.config.dryRun) {
+    console.log(`\n[DRY RUN] Would generate and merge: ${context.config.output.json}`);
+    if (context.config.exportExcel) {
+      console.log(`[DRY RUN] Would export Excel: ${context.config.output.excel}`);
+    }
+    return;
+  }
+
   const localesDir =  context.config.output.json.split("/").slice(0, -1).join("/");
   fs.mkdirSync(localesDir, { recursive: true });
   fs.writeFileSync(
