@@ -1,0 +1,51 @@
+---
+description: 生成 git commit 信息时必须使用中文
+alwaysApply: true
+---
+
+# Commit 信息中文规范
+
+当用户要求创建 commit、生成 commit message、或总结变更用于提交时，必须遵守：
+
+## 强制要求
+
+1. **标题与正文一律使用中文**（专有名词、文件路径、API、代码标识符可保留英文原文）
+2. 采用 Conventional Commits 前缀 + 中文简述，与本仓库历史风格一致
+3. 聚焦「为什么改」，一两句说清意图；不要罗列文件清单式流水账
+4. 不要用英文模板句（如 `update ...` / `fix ...` 整句英文）
+
+## 前缀
+
+| 前缀 | 场景 |
+|------|------|
+| `feat:` | 新能力 |
+| `fix:` | 缺陷修复 |
+| `refactor:` | 重构（行为不变） |
+| `style:` | 格式/无关逻辑的清理 |
+| `docs:` | 文档 |
+| `test:` | 测试 |
+| `chore:` | 构建、杂项 |
+
+## 示例
+
+```text
+# ❌ BAD
+fix: update replacement format for template literals and improve scanning logic
+
+# ✅ GOOD
+fix: 模板字符串插值改为数组传参，并统一 dryRun/扫描扩展名/中文检测
+
+# ✅ GOOD
+fix: 修复模板节点位置计算偏移导致替换错位
+```
+
+## 多段正文（可选）
+
+需要补充说明时，空一行后用中文条目：
+
+```text
+fix: dryRun 模式下禁止写出语言包与 Excel
+
+- 与源码不落盘行为对齐
+- 仅输出 Would generate / Would export 日志
+```
