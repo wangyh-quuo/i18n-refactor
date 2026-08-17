@@ -1,5 +1,22 @@
+# 源码与构建配置（发布产物是 dist/main.esm.js）
 packages/
-rollup.config.js
-.gitattributes
 test/
+docs/
+.cursor/
+rollup.config.js
+tsconfig.json
+.gitattributes
 .mocharc.json
+.gitignore
+
+# 构建附属产物
+*.map
+dist/packages/
+dist/test/
+
+# 本地与杂项
+.DS_Store
+coverage
+output
+locales
+package-lock.json
