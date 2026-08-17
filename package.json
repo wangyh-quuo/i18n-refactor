@@ -1,6 +1,6 @@
 {
   "name": "@wangyh-quuo/i18n-refactor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/main.esm.js",
   "type": "module",
   "scripts": {
